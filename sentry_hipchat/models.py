@@ -222,25 +222,18 @@ class Context(object):
         self.sender = sender
         self.context = context
 
-    @property
-    def tenant_token(self):
-        rv = getattr(self, '_tenant_token', None)
-        if rv is None:
-            rv = self._tenant_token = self.tenant.get_token()
-        return rv
-
-    @classmethod
-    def for_request(self, request, body=None):
+    @staticmethod
+    def for_request(request, body=None):
+        """Creates the context for a specific request."""
         tenant, jwt_data = Tenant.objects.for_request(request, body)
         webhook_sender_id = jwt_data.get('sub')
+        sender_data = None
 
         if body and 'item' in body:
             if 'sender' in body['item']:
                 sender_data = body['item']['sender']
             elif 'message' in body['item'] and 'from' in body['item']['message']:
                 sender_data = body['item']['message']['from']
-            else:
-                sender_data = None
 
         if sender_data is None:
             if webhook_sender_id is None:
@@ -254,8 +247,31 @@ class Context(object):
                 name=sender_data.get('name'),
                 mention_name=sender_data.get('mention_name'),
             ),
-            context=jwt_data.get('context'),
+            context=jwt_data.get('context') or {},
         )
+
+    @staticmethod
+    def for_tenant_id(tenant_id):
+        """Creates a context just for a tenant."""
+        tenant = Tenant.objects.get(pk=tenant_id)
+        return Context(
+            tenant=tenant,
+            sender=None,
+            context={},
+        )
+
+    @property
+    def tenant_token(self):
+        """The cached token of the current tenant."""
+        rv = getattr(self, '_tenant_token', None)
+        if rv is None:
+            rv = self._tenant_token = self.tenant.get_token()
+        return rv
+
+    @property
+    def room_id(self):
+        """The most appropriate room for this context."""
+        return self.context.get('room_id', self.tenant.room_id)
 
     def post(self, url, data):
         return requests.post(urljoin(self.tenant.api_base_url, url), headers={
@@ -263,6 +279,11 @@ class Context(object):
             'Content-Type': 'application/json'
         }, data=json.dumps(data), timeout=10)
 
-    def send_notification(self, message):
-        self.post('room/%s/notification' % self.tenant.room_id,
-                  {'message': message})
+    def send_notification(self, message, color='yellow', notify=False,
+                          format='html', card=None):
+        data = {'message': message, 'format': format, 'notify': notify}
+        if color is not None:
+            data['color'] = color
+        if card is not None:
+            data['card'] = card
+        self.post('room/%s/notification' % self.room_id, data)

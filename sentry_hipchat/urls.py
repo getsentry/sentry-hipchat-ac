@@ -10,7 +10,7 @@ urlpatterns = patterns('',
         name='sentry-hipchat-installable'),
     url('^addon/installable/(?P<oauth_id>[^/]+)$',
         views.InstallableView.as_view()),
-    url('^configuration/$', views.ConfigView.as_view(),
+    url('^configuration/$', views.configure,
         name='sentry-hipchat-config'),
 
     url('^event/room-message$', views.on_room_message,

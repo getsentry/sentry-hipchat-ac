@@ -4,33 +4,18 @@ from functools import update_wrapper
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 
-from .utils import JsonResponse, ac_absolute_uri
+from .utils import JsonResponse, ac_absolute_uri, IS_DEBUG
 from .models import Tenant, Context
 
 
 '''
 https://c00cc4c7.ngrok.io/hipchat/
 '''
-
-
-class ConfigView(View):
-
-    def get(self, request):
-        return HttpResponse('''<!doctype html>
-<html>
-  <head>
-    <script src="https://www.hipchat.com/atlassian-connect/all.js"></script>
-    <link rel="stylesheet" href="https://www.hipchat.com/atlassian-connect/all.css">
-  </head>
-  <body>
-    Hello World!
-  </body>
-</html>
-        ''')
 
 
 class DescriptorView(View):
@@ -109,14 +94,61 @@ class InstallableView(View):
 
 def webhook(f):
     @csrf_exempt
-    def new_f(request):
+    def new_f(request, **kwargs):
         data = json.loads(request.body) or {}
         context = Context.for_request(request, data)
-        return f(request, context, data)
+        return f(request, context, data, **kwargs)
     return update_wrapper(new_f, f)
+
+
+def with_context(f):
+    def new_f(request, **kwargs):
+        context = Context.for_request(request)
+        return f(request, context, **kwargs)
+    return update_wrapper(new_f, f)
+
+
+@with_context
+def configure(request, context):
+    return render(request, 'hipchat_sentry_configure.html', {
+        'tenant': context.tenant,
+        'hipchat_debug': IS_DEBUG,
+    })
 
 
 @webhook
 def on_room_message(request, context, data):
-    context.send_notification('Hello World!')
+    context.send_notification('Hello <em>World</em>!', color='green')
+    # card = {
+    #     'style': 'application',
+    #     'url': 'http://www.getsentry.com/whatever',
+    #     'id': 'sentry/whatever',
+    #     'title': 'This is the title',
+    #     'description': 'This is the description',
+    #     'images': {},
+    #     'metadata': {
+    #         'stuff': 'bar',
+    #         'things': [
+    #             {
+    #                 'key': 'x'
+    #             },
+    #             {
+    #                 'key': 'y'
+    #             }
+    #         ]
+    #     },
+    #     'date': str(int(time.time())),
+    #     'attributes': [
+    #         {
+    #             'label': 'Foo',
+    #             'value': {
+    #                 'label': 'Bar bar bar',
+    #                 'style': 'lozenge-warning'
+    #             }
+    #         }
+    #     ],
+    #     'activity': {
+    #         'text': 'mitsuhiko did some shit'
+    #     }
+    # }
     return HttpResponse('', status=204)

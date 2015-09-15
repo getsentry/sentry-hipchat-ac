@@ -6,6 +6,7 @@ from sentry.utils.http import absolute_uri
 
 
 ac_base = os.environ.get('AC_BASE_URL')
+IS_DEBUG = ac_base is not None
 
 
 class JsonResponse(HttpResponse):
