@@ -12,4 +12,7 @@ urlpatterns = patterns('',
         views.InstallableView.as_view()),
     url('^configuration/$', views.ConfigView.as_view(),
         name='sentry-hipchat-config'),
+
+    url('^event/room-message$', views.on_room_message,
+        name='sentry-hipchat-room-message')
 )

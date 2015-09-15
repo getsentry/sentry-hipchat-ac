@@ -1,4 +1,6 @@
 import json
+import requests
+from functools import update_wrapper
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
@@ -7,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 from .utils import JsonResponse, ac_absolute_uri
+from .models import Tenant, Context
 
 
 '''
@@ -53,6 +56,14 @@ class DescriptorView(View):
                 'configurable': {
                     'url': ac_absolute_uri(reverse('sentry-hipchat-config')),
                 },
+                'webhook': [
+                    {
+                        'event': 'room_message',
+                        'url': ac_absolute_uri(reverse('sentry-hipchat-room-message')),
+                        'pattern': 'sentry[,:]',
+                        'authentication': 'jwt',
+                    }
+                ]
             },
             'vendor': {
                 'url': 'https://www.getsentry.com/',
@@ -75,9 +86,37 @@ class InstallableView(View):
             return HttpResponse('This add-on can only be installed in '
                                 'individual rooms.', status=400)
 
-        print 'INIT', data
+        capdoc = requests.get(data['capabilitiesUrl'], timeout=10).json()
+        if capdoc['links'].get('self') != data['capabilitiesUrl']:
+            return HttpResponse('Mismatch on capabilities URL',
+                                status=400)
+
+        Tenant.objects.create(
+            id=data['oauthId'],
+            room_id=room_id,
+            secret=data['oauthSecret'],
+            capdoc=capdoc,
+        )
+
         return HttpResponse('', status=201)
 
     def delete(self, request, oauth_id):
-        print 'DELETE', oauth_id
+        tenant = Tenant.objects.get(pk=oauth_id)
+        if tenant is not None:
+            tenant.delete()
         return HttpResponse('', status=201)
+
+
+def webhook(f):
+    @csrf_exempt
+    def new_f(request):
+        data = json.loads(request.body) or {}
+        context = Context.for_request(request, data)
+        return f(request, context, data)
+    return update_wrapper(new_f, f)
+
+
+@webhook
+def on_room_message(request, context, data):
+    context.send_notification('Hello World!')
+    return HttpResponse('', status=204)
