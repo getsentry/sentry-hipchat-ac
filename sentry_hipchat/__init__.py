@@ -17,7 +17,7 @@ def _patch_urls():
     from django.conf.urls import include, patterns, url
     from sentry.conf import urls
     urls.urlpatterns = patterns('',
-        url('^hipchat/', include('sentry_hipchat.urls')),
+        url('^api/hipchat/', include('sentry_hipchat.urls')),
     ) + urls.urlpatterns
 
 

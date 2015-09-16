@@ -13,15 +13,32 @@ import requests
 
 import sentry_hipchat
 
-from django import forms
 from django.conf import settings
 from django.db import models
 from django.core.cache import cache
+from django.template.loader import render_to_string
 from urlparse import urlparse, urljoin
 
 from sentry.plugins.bases.notify import NotifyPlugin
+from sentry.utils.http import absolute_uri
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
+
+
+# plan of action:
+#   1. sign in / reuse session
+#   2. authorize organizations
+#   3. freeze authenticaiton into tenant
+#
+#   - plugin configure page just lists the tenants for a plugin.
+#   - hipchat configure page shows a list of all projects in the
+#     whiltelisted orgs for the room.  shows also who authenticated
+#     the plugin and adds a sign-out link.
+#   - each project that is added is registered with the tenant and
+#     the hipchat plugin is automatically activated on the sentry
+#     side.
+#   - disabling the plugin de-registers the project from all active
+#     tenants.
 
 
 def base_url(url):
@@ -40,15 +57,6 @@ class BadTenantError(Exception):
     pass
 
 
-class HipchatOptionsForm(forms.Form):
-    token = forms.CharField(help_text="Your hipchat API v1 token.")
-    room = forms.CharField(help_text="Room name or ID.")
-    notify = forms.BooleanField(help_text='Notify message in chat window.',
-                                required=False)
-    include_project_name = forms.BooleanField(
-        help_text='Include project name in message.', required=False)
-
-
 class HipchatMessage(NotifyPlugin):
     author = 'Functional Software Inc.'
     author_url = 'https://github.com/getsentry/sentry-hipchat'
@@ -62,11 +70,16 @@ class HipchatMessage(NotifyPlugin):
     title = 'Hipchat'
     conf_title = title
     conf_key = 'hipchat'
-    project_conf_form = HipchatOptionsForm
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
 
     def is_configured(self, project):
         return all((self.get_option(k, project) for k in ('room', 'token')))
+
+    def configure(self, request, project=None):
+        return render_to_string('hipchat_sentry_configure_plugin.html', dict(
+            on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
+            tenants=[],
+            descriptor=absolute_uri('/api/hipchat/')))
 
     def on_alert(self, alert, **kwargs):
         pass
@@ -217,10 +230,11 @@ class HipchatUser(object):
 
 class Context(object):
 
-    def __init__(self, tenant, sender, context):
+    def __init__(self, tenant, sender, context, signed_request=None):
         self.tenant = tenant
         self.sender = sender
         self.context = context
+        self.signed_request = signed_request
 
     @staticmethod
     def for_request(request, body=None):
@@ -247,6 +261,7 @@ class Context(object):
                 name=sender_data.get('name'),
                 mention_name=sender_data.get('mention_name'),
             ),
+            signed_request=request.GET.get('signed_request'),
             context=jwt_data.get('context') or {},
         )
 
@@ -286,4 +301,4 @@ class Context(object):
             data['color'] = color
         if card is not None:
             data['card'] = card
-        self.post('room/%s/notification' % self.room_id, data)
+        print self.post('room/%s/notification' % self.room_id, data).text

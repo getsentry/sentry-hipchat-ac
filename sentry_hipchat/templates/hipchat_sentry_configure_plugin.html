@@ -1,0 +1,18 @@
+<p>
+  Hipchat notifications are managed through Hipchat itself.  After you
+  added the Sentry integration directly into Hipchat you can add projects
+  directly from there to your rooms.
+<p>
+  This page only shows in which rooms the project shows up.  To add or
+  remove them, you need to use the integration configuration page.
+{% if on_premise %}
+<p>
+  To add the Sentry integration to Hipchat click on “Install an integration
+  from a descriptor URL” on your room in Hipchat and add the following
+  descriptor URL:
+<pre>{{ descriptor }}</pre>
+{% endif %}
+<h2>Active Rooms</h2>
+{% if not tenants %}
+<p>The plugin is currently not active in any rooms.
+{% endif %}

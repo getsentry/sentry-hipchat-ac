@@ -4,12 +4,14 @@ from functools import update_wrapper
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 
-from .utils import JsonResponse, ac_absolute_uri, IS_DEBUG
+from sentry.utils.http import absolute_uri
+
+from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
 
 
@@ -26,25 +28,25 @@ class DescriptorView(View):
             'name': 'Sentry for Hipchat',
             'description': 'Sentry integration for Hipchat.',
             'links': {
-                'self': ac_absolute_uri(reverse('sentry-hipchat-descriptor')),
+                'self': absolute_uri(reverse('sentry-hipchat-descriptor')),
             },
             'capabilities': {
                 'installable': {
                     'allowRoom': True,
                     'allowGlobal': False,
-                    'callbackUrl': ac_absolute_uri(reverse(
+                    'callbackUrl': absolute_uri(reverse(
                         'sentry-hipchat-installable')),
                 },
                 'hipchatApiConsumer': {
                     'scopes': ['send_notification'],
                 },
                 'configurable': {
-                    'url': ac_absolute_uri(reverse('sentry-hipchat-config')),
+                    'url': absolute_uri(reverse('sentry-hipchat-config')),
                 },
                 'webhook': [
                     {
                         'event': 'room_message',
-                        'url': ac_absolute_uri(reverse('sentry-hipchat-room-message')),
+                        'url': absolute_uri(reverse('sentry-hipchat-room-message')),
                         'pattern': 'sentry[,:]',
                         'authentication': 'jwt',
                     }
@@ -110,45 +112,56 @@ def with_context(f):
 
 @with_context
 def configure(request, context):
+    # XXX: this is a bit terrible because it means the login url is
+    # already set at the time we visit this page.  This can have some
+    # stupid consequences when opening up the login page seaprately in a
+    # different tab later.  Ideally we could pass the login url through as
+    # a URL parameter instead but this is currently not securely possible.
+    request.session['_next'] = request.get_full_path()
     return render(request, 'hipchat_sentry_configure.html', {
         'tenant': context.tenant,
+        'user': request.user,
+        'signed_request': context.signed_request,
         'hipchat_debug': IS_DEBUG,
     })
 
 
 @webhook
 def on_room_message(request, context, data):
-    context.send_notification('Hello <em>World</em>!', color='green')
-    # card = {
-    #     'style': 'application',
-    #     'url': 'http://www.getsentry.com/whatever',
-    #     'id': 'sentry/whatever',
-    #     'title': 'This is the title',
-    #     'description': 'This is the description',
-    #     'images': {},
-    #     'metadata': {
-    #         'stuff': 'bar',
-    #         'things': [
-    #             {
-    #                 'key': 'x'
-    #             },
-    #             {
-    #                 'key': 'y'
-    #             }
-    #         ]
-    #     },
-    #     'date': str(int(time.time())),
-    #     'attributes': [
-    #         {
-    #             'label': 'Foo',
-    #             'value': {
-    #                 'label': 'Bar bar bar',
-    #                 'style': 'lozenge-warning'
-    #             }
-    #         }
-    #     ],
-    #     'activity': {
-    #         'text': 'mitsuhiko did some shit'
-    #     }
-    # }
+    card = {
+        'style': 'application',
+        'url': 'http://www.getsentry.com/whatever',
+        'id': 'sentry/whatever',
+        'title': 'This is the title',
+        'description': 'This is the description',
+        'images': {},
+        'icon': {
+            'url': 'http://www.getsentry.com/foo'
+        },
+        'metadata': {
+            'stuff': 'bar',
+            'things': [
+                {
+                    'key': 'x'
+                },
+                {
+                    'key': 'y'
+                }
+            ]
+        },
+        'attributes': [
+            {
+                'label': 'Foo',
+                'value': {
+                    'label': 'Bar bar bar',
+                    'style': 'lozenge-error'
+                }
+            }
+        ],
+        'activity': {
+            'html': 'mitsuhiko did some shit',
+        },
+        'html': 'aha',
+    }
+    context.send_notification('Hello <em>World</em>!', color='green', card=card)
     return HttpResponse('', status=204)
