@@ -7,19 +7,50 @@
     <link rel="stylesheet" href="https://www.hipchat.com/atlassian-connect/all{% if hipchat_debug %}-debug{% endif %}.css">
   </head>
   <body>
-    {% if user.is_authenticated %}
-      <p>You are signed in as {{ user.username }}.  <a href="{% url 'sentry-logout' %}">Change accounts?</a></p>
-      <h2>Projects</h2>
-      <p>Select the projects which should be associated with the room.</p>
+    {% if tenant.auth_user %}
+      <p>
+        This room is authenticated as {{ tenant.auth_user.username }} and has
+        access to the following organizations:
+      <ul>
+        {% for org in available_orgs %}
+          <li>{{ org.name }}</li>
+        {% endfor %}
+      </ul>
+      <p>
+        To change the authentication you can remove the integration and
+        re-authenticate.
+      <h3>Projects</h3>
+      <p>
+        Select the projects you want to notify for:
+      <form action="" method="post">
+        {% csrf_token %}
+        {{ project_select_form }}
+        <input type="submit" value="Save changes">
+      </form>
     {% else %}
-      <h2>Sign into Sentry</h2>
+      <h2>Associate with Sentry</h2>
       <p>
         Welcome to Sentry for Hipchat.  Before we can get going, you need to
-        sign into Sentry with your user account.
-      </p>
+        associate this Hipchat room with a Sentry account.
+      {% if current_user.is_authenticated %}
+      <p>
+        You are currently signed in as {{ current_user.username }}.
+        <a href="{% url 'sentry-logout' %}">Change user?</a>
+      <h3>Grant Access</h3>
+      <p>
+        You can decide which organizations the integration will have access
+        to.  This cannot be changed later without removing and re-adding
+        the integration.  At a later point you can add or remove projects
+        within those organizations.
+      <form action="" method="post">
+        {% csrf_token %}
+        {{ grant_form }}
+        <input type="submit" value="Grant access">
+      </form>
+      {% else %}
       <p>
         <a href="{% url 'sentry-login' %}">Sign in</a>
-      </p>
+      {% endif %}
     {% endif %}
   </body>
 </html>

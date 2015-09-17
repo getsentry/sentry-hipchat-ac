@@ -1,18 +1,20 @@
 import json
 import requests
 from functools import update_wrapper
+from django import forms
 from django.views.generic import View
 from django.core.urlresolvers import reverse
-from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-
 from sentry.utils.http import absolute_uri
+from sentry.models import Organization, Team
 
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
+from .pluginlink import enable_plugin_for_tenant, disable_plugin_for_tenant
 
 
 '''
@@ -38,7 +40,7 @@ class DescriptorView(View):
                         'sentry-hipchat-installable')),
                 },
                 'hipchatApiConsumer': {
-                    'scopes': ['send_notification'],
+                    'scopes': ['send_notification', 'view_room'],
                 },
                 'configurable': {
                     'url': absolute_uri(reverse('sentry-hipchat-config')),
@@ -78,20 +80,90 @@ class InstallableView(View):
             return HttpResponse('Mismatch on capabilities URL',
                                 status=400)
 
-        Tenant.objects.create(
+        tenant = Tenant.objects.create(
             id=data['oauthId'],
             room_id=room_id,
             secret=data['oauthSecret'],
             capdoc=capdoc,
         )
+        tenant.update_room_info()
 
         return HttpResponse('', status=201)
 
     def delete(self, request, oauth_id):
-        tenant = Tenant.objects.get(pk=oauth_id)
-        if tenant is not None:
+        try:
+            tenant = Tenant.objects.get(pk=oauth_id)
             tenant.delete()
+        except Tenant.DoesNoteExist:
+            pass
         return HttpResponse('', status=201)
+
+
+class GrantAccessForm(forms.Form):
+    orgs = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple,
+                                     label='Organizations',
+                                     required=False)
+
+    def __init__(self, tenant, request):
+        self.user = request.user
+        self.tenant = tenant
+        self.all_orgs = Organization.objects.get_for_user(request.user)
+        org_choices = [(str(x.id), x.name) for x in self.all_orgs]
+        if request.method == 'POST':
+            forms.Form.__init__(self, request.POST)
+        else:
+            forms.Form.__init__(self)
+        self.fields['orgs'].choices = org_choices
+
+    def clean_orgs(self):
+        return [org for org in self.all_orgs if str(org.id) in
+                self.cleaned_data['orgs']]
+
+    def save_changes(self):
+        self.tenant.auth_user = self.user
+        self.tenant.organizations = self.cleaned_data['orgs']
+        self.tenant.save()
+
+
+class ProjectSelectForm(forms.Form):
+    projects = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple,
+                                         label='Projects', required=False)
+
+    def __init__(self, tenant, request):
+        self.tenant = tenant
+        all_orgs = Organization.objects.get_for_user(tenant.auth_user)
+        project_choices = []
+        self.projects_by_id = {}
+
+        for org in all_orgs:
+            teams = Team.objects.get_for_user(org, tenant.auth_user,
+                                              with_projects=True)
+            for team, projects in teams:
+                for project in projects:
+                    project_choices.append((str(project.id), '%s/%s' % (
+                        org.name, project.name)))
+                    self.projects_by_id[str(project.id)] = project
+
+        project_choices.sort(key=lambda x: x[1].lower())
+
+        if request.method == 'POST':
+            forms.Form.__init__(self, request.POST)
+        else:
+            forms.Form.__init__(self, initial={
+                'projects': [str(x.id) for x in tenant.projects.all()],
+            })
+
+        self.fields['projects'].choices = project_choices
+
+    def clean_projects(self):
+        return set(self.cleaned_data['projects'])
+
+    def save_changes(self):
+        for project_id, project in self.projects_by_id.iteritems():
+            if project_id in self.cleaned_data['projects']:
+                enable_plugin_for_tenant(project, self.tenant)
+            else:
+                disable_plugin_for_tenant(project, self.tenant)
 
 
 def webhook(f):
@@ -118,9 +190,29 @@ def configure(request, context):
     # different tab later.  Ideally we could pass the login url through as
     # a URL parameter instead but this is currently not securely possible.
     request.session['_next'] = request.get_full_path()
+
+    grant_form = None
+    project_select_form = None
+
+    if context.tenant.auth_user is None and \
+       request.user.is_authenticated():
+        grant_form = GrantAccessForm(context.tenant, request)
+        if request.method == 'POST' and grant_form.is_valid():
+            grant_form.save_changes()
+            return HttpResponseRedirect(request.get_full_path())
+
+    elif context.tenant.auth_user is not None:
+        project_select_form = ProjectSelectForm(context.tenant, request)
+        if request.method == 'POST' and project_select_form.is_valid():
+            project_select_form.save_changes()
+            return HttpResponseRedirect(request.get_full_path())
+
     return render(request, 'hipchat_sentry_configure.html', {
         'tenant': context.tenant,
-        'user': request.user,
+        'current_user': request.user,
+        'grant_form': grant_form,
+        'project_select_form': project_select_form,
+        'available_orgs': list(context.tenant.organizations.all()),
         'signed_request': context.signed_request,
         'hipchat_debug': IS_DEBUG,
     })

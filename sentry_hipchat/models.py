@@ -24,6 +24,8 @@ from sentry.utils.http import absolute_uri
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
+from .pluginlink import disable_plugin_for_tenant
+
 
 # plan of action:
 #   1. sign in / reuse session
@@ -57,7 +59,7 @@ class BadTenantError(Exception):
     pass
 
 
-class HipchatMessage(NotifyPlugin):
+class HipchatNotifier(NotifyPlugin):
     author = 'Functional Software Inc.'
     author_url = 'https://github.com/getsentry/sentry-hipchat'
     version = sentry_hipchat.VERSION
@@ -78,7 +80,7 @@ class HipchatMessage(NotifyPlugin):
     def configure(self, request, project=None):
         return render_to_string('hipchat_sentry_configure_plugin.html', dict(
             on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
-            tenants=[],
+            tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri('/api/hipchat/')))
 
     def on_alert(self, alert, **kwargs):
@@ -147,6 +149,9 @@ class Tenant(models.Model):
     objects = TenantManager()
     id = models.CharField(max_length=40, primary_key=True)
     room_id = models.CharField(max_length=40)
+    room_name = models.CharField(max_length=200, null=True)
+    room_owner_id = models.CharField(max_length=40, null=True)
+    room_owner_name = models.CharField(max_length=200, null=True)
     secret = models.CharField(max_length=120)
     homepage = models.CharField(max_length=250)
     token_url = models.CharField(max_length=250)
@@ -154,9 +159,15 @@ class Tenant(models.Model):
     api_base_url = models.CharField(max_length=250)
     installed_from = models.CharField(max_length=250)
 
+    auth_user = models.ForeignKey('sentry.User', null=True)
+    organizations = models.ManyToManyField(
+        'sentry.Organization', related_name='hipchat_tenant_set')
+    projects = models.ManyToManyField(
+        'sentry.Project', related_name='hipchat_tenant_set')
+
     def get_token(self, token_only=True, scopes=None):
         if scopes is None:
-            scopes = ['send_notification']
+            scopes = ['send_notification', 'view_room']
 
         cache_key = 'hipchat-tokens:%s:%s' % (self.id, ','.join(scopes))
 
@@ -201,6 +212,24 @@ class Tenant(models.Model):
 
         data.update(jwt_data)
         return jwt.encode(data, self.secret)
+
+    def delete(self, *args, **kwargs):
+        for project in self.projects.all():
+            disable_plugin_for_tenant(project, self)
+        models.Model.delete(self, *args, **kwargs)
+
+    def update_room_info(self, commit=True):
+        headers = {
+            'Authorization': 'Bearer %s' % self.get_token(),
+            'Content-Type': 'application/json'
+        }
+        room = requests.get(urljoin(self.api_base_url, 'room/%s') %
+                            self.room_id, headers=headers, timeout=5).json()
+        self.room_name = room['name']
+        self.room_owner_id = str(room['owner']['id'])
+        self.room_owner_name = str(room['owner']['name'])
+        if commit:
+            self.save()
 
     def __repr__(self):
         return '<Tenant id=%r from=%r>' % (
@@ -301,4 +330,4 @@ class Context(object):
             data['color'] = color
         if card is not None:
             data['card'] = card
-        print self.post('room/%s/notification' % self.room_id, data).text
+        self.post('room/%s/notification' % self.room_id, data)

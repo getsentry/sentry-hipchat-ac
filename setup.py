@@ -44,7 +44,7 @@ setup(
             'sentry_hipchat = sentry_hipchat ',
         ],
         'sentry.plugins': [
-            'hipchat = sentry_hipchat.models:HipchatMessage',
+            'hipchat = sentry_hipchat.models:HipchatNotifier',
          ],
     },
     classifiers=[

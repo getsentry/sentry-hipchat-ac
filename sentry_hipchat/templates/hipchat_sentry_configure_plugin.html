@@ -15,4 +15,17 @@
 <h2>Active Rooms</h2>
 {% if not tenants %}
 <p>The plugin is currently not active in any rooms.
+{% else %}
+  <ul>
+    {% for tenant in tenants %}
+      <li><dl>
+        <dt>Installed from:
+        <dd>{{ tenant.installed_from }}
+        <dt>Room:
+        <dd>{{ tenant.room_name }} (id={{ tenant.room_id }}; owner={{ tenant.room_owner_name }})
+        <dt>Authenticated user:
+        <dd>{{ tenant.auth_user.username }}
+      </dl>
+    {% endfor %}
+  </ul>
 {% endif %}
