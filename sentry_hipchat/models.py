@@ -18,8 +18,6 @@ from urlparse import urlparse, urljoin
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
-from .plugin import disable_plugin_for_tenant
-
 
 def base_url(url):
     result = urlparse(url)
@@ -277,3 +275,6 @@ class Context(object):
         if card is not None:
             data['card'] = card
         self.post('room/%s/notification' % self.room_id, data)
+
+
+from .plugin import disable_plugin_for_tenant

@@ -8,8 +8,6 @@ from sentry.plugins import plugins
 from sentry.plugins.bases.notify import NotifyPlugin
 from sentry.utils.http import absolute_uri
 
-from .models import Tenant, Context
-
 
 COLORS = {
     'ALERT': 'red',
@@ -74,9 +72,10 @@ class HipchatNotifier(NotifyPlugin):
             descriptor=absolute_uri('/api/hipchat/')))
 
     def disable(self, project=None, user=None):
+        was_enabled = self.get_option('enabled', project)
         NotifyPlugin.disable(self, project, user)
 
-        if project is not None:
+        if project is not None and was_enabled:
             for tenant in Tenant.objects.filter(projects__in=[project]):
                 disable_plugin_for_tenant(project, tenant)
 
@@ -116,3 +115,6 @@ class HipchatNotifier(NotifyPlugin):
                 'link': escape(link),
             }
             ctx.send_notification(message, color=color, notify=True)
+
+
+from .models import Tenant, Context

@@ -14,7 +14,7 @@ from sentry.models import Organization, Team
 
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
-from .pluginlink import enable_plugin_for_tenant, disable_plugin_for_tenant
+from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
 
 
 '''
