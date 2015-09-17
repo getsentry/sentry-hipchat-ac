@@ -242,9 +242,8 @@ class Context(object):
         )
 
     @staticmethod
-    def for_tenant_id(tenant_id):
+    def for_tenant(tenant):
         """Creates a context just for a tenant."""
-        tenant = Tenant.objects.get(pk=tenant_id)
         return Context(
             tenant=tenant,
             sender=None,

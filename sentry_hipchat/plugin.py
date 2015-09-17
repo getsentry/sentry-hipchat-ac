@@ -2,12 +2,22 @@ import sentry_hipchat
 
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.utils.html import escape
 
 from sentry.plugins import plugins
 from sentry.plugins.bases.notify import NotifyPlugin
 from sentry.utils.http import absolute_uri
 
-from .models import Tenant
+from .models import Tenant, Context
+
+
+COLORS = {
+    'ALERT': 'red',
+    'ERROR': 'red',
+    'WARNING': 'yellow',
+    'INFO': 'green',
+    'DEBUG': 'purple',
+}
 
 
 def enable_plugin_for_tenant(project, tenant):
@@ -74,4 +84,21 @@ class HipchatNotifier(NotifyPlugin):
         pass
 
     def notify_users(self, group, event, fail_silently=False):
-        pass
+        project = event.project
+        level = group.get_level_display().upper()
+        link = group.get_absolute_url()
+        color = COLORS.get(level, 'purple')
+
+        tenants = Tenant.objects.filter(project=event.project)
+        for tenant in tenants:
+            ctx = Context.for_tenant(tenant)
+            message = (
+                '[%(level)s]%(project_name)s %(message)s '
+                '[<a href="%(link)s">view</a>]'
+            ) % {
+                'level': escape(level),
+                'project_name': '<strong>%s</strong>' % escape(project.name),
+                'message': escape(event.error()),
+                'link': escape(link),
+            }
+            ctx.send_notification(message, color=color, notify=True)
