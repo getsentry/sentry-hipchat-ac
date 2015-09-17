@@ -11,36 +11,14 @@ import time
 import json
 import requests
 
-import sentry_hipchat
-
-from django.conf import settings
 from django.db import models
 from django.core.cache import cache
-from django.template.loader import render_to_string
 from urlparse import urlparse, urljoin
 
-from sentry.plugins.bases.notify import NotifyPlugin
-from sentry.utils.http import absolute_uri
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
-from .pluginlink import disable_plugin_for_tenant
-
-
-# plan of action:
-#   1. sign in / reuse session
-#   2. authorize organizations
-#   3. freeze authenticaiton into tenant
-#
-#   - plugin configure page just lists the tenants for a plugin.
-#   - hipchat configure page shows a list of all projects in the
-#     whiltelisted orgs for the room.  shows also who authenticated
-#     the plugin and adds a sign-out link.
-#   - each project that is added is registered with the tenant and
-#     the hipchat plugin is automatically activated on the sentry
-#     side.
-#   - disabling the plugin de-registers the project from all active
-#     tenants.
+from .plugin import disable_plugin_for_tenant
 
 
 def base_url(url):
@@ -57,37 +35,6 @@ class OauthClientInvalidError(Exception):
 
 class BadTenantError(Exception):
     pass
-
-
-class HipchatNotifier(NotifyPlugin):
-    author = 'Functional Software Inc.'
-    author_url = 'https://github.com/getsentry/sentry-hipchat'
-    version = sentry_hipchat.VERSION
-    description = "Event notification to Hipchat."
-    resource_links = [
-        ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat/issues'),
-        ('Source', 'https://github.com/getsentry/sentry-hipchat'),
-    ]
-    slug = 'hipchat'
-    title = 'Hipchat'
-    conf_title = title
-    conf_key = 'hipchat'
-    timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
-
-    def is_configured(self, project):
-        return all((self.get_option(k, project) for k in ('room', 'token')))
-
-    def configure(self, request, project=None):
-        return render_to_string('hipchat_sentry_configure_plugin.html', dict(
-            on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
-            tenants=list(project.hipchat_tenant_set.all()),
-            descriptor=absolute_uri('/api/hipchat/')))
-
-    def on_alert(self, alert, **kwargs):
-        pass
-
-    def notify_users(self, group, event, fail_silently=False):
-        pass
 
 
 class TenantManager(models.Manager):
