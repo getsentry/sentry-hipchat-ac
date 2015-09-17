@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import requests
 from functools import update_wrapper
@@ -224,34 +225,52 @@ def on_room_message(request, context, data):
         'style': 'application',
         'url': 'http://www.getsentry.com/whatever',
         'id': 'sentry/whatever',
-        'title': 'This is the title',
-        'description': 'This is the description',
+        'title': u"Error processing 'rule_notify' on 'TwilioPlugin': 'NoneType' object …",
+        'description': 'This is the description. <em>test</em>',
         'images': {},
         'icon': {
-            'url': 'http://www.getsentry.com/foo'
+            'url': 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
         },
-        'metadata': {
-            'stuff': 'bar',
-            'things': [
-                {
-                    'key': 'x'
-                },
-                {
-                    'key': 'y'
-                }
-            ]
-        },
+        'metadata': {},
         'attributes': [
             {
-                'label': 'Foo',
+                'label': 'level',
                 'value': {
-                    'label': 'Bar bar bar',
+                    'label': 'error',
                     'style': 'lozenge-error'
-                }
+                },
+            },
+            {
+                'label': 'logger',
+                'value': {
+                    'label': 'sentry',
+                },
+            },
+            {
+                'label': 'release',
+                'value': {
+                    'label': 'f1b6abfce3359d1f71ebbe5cda2469854a72d127',
+                },
+            },
+            {
+                'label': 'server_name',
+                'value': {
+                    'label': 'worker-1',
+                },
             }
         ],
         'activity': {
-            'html': 'mitsuhiko did some shit',
+            'html': '''
+            <p>
+            <img src="https://beta.getsentry.com/_static/sentry/images/favicon.ico" style="width: 16px; height: 16px">
+                <strong>New Sentry Event</strong>
+            <p><code>Error processing 'rule_notify' on 'TwilioPlugin': 'NoneType' object has no attribute 'split'</code>
+            <p><strong>Project:</strong>
+                <span class="aui-icon aui-icon-small aui-iconfont-devtools-submodule"></span>
+                <a href="#">Sentry Backend</a>
+            <p><strong>Culprit:</strong>
+            <em>sentry_twilio/models.py</em> in <em>notify_users</em> at line <em>99</em>
+            '''
         },
         'html': 'aha',
     }

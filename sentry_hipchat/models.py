@@ -274,7 +274,7 @@ class Context(object):
             data['color'] = color
         if card is not None:
             data['card'] = card
-        self.post('room/%s/notification' % self.room_id, data)
+        print self.post('room/%s/notification' % self.room_id, data).text
 
 
 from .plugin import disable_plugin_for_tenant
