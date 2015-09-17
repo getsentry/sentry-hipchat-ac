@@ -27,22 +27,22 @@ def enable_plugin_for_tenant(project, tenant):
     plugin.enable(project)
 
     # Add our tenant to the plugin.
-    active = set(plugin.get_option('active_projects', project) or ())
+    active = set(plugin.get_option('tenants', project) or ())
     if tenant.id not in active:
         active.add(tenant.id)
         tenant.projects.add(project)
-    plugin.set_option('active_projects', sorted(active), project)
+    plugin.set_option('tenants', sorted(active), project)
 
 
 def disable_plugin_for_tenant(project, tenant):
     plugin = plugins.get('hipchat')
 
     # Remove our tenant to the plugin.
-    active = set(plugin.get_option('active_projects', project) or ())
+    active = set(plugin.get_option('tenants', project) or ())
     if tenant.id in active:
         tenant.projects.remove(project)
         active.discard(tenant.id)
-    plugin.set_option('active_projects', sorted(active), project)
+    plugin.set_option('tenants', sorted(active), project)
 
     # If the last tenant is gone, we disable the entire plugin.
     if not active:
@@ -65,7 +65,7 @@ class HipchatNotifier(NotifyPlugin):
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
 
     def is_configured(self, project):
-        return all((self.get_option(k, project) for k in ('room', 'token')))
+        return bool(self.get_option('tenants', project))
 
     def configure(self, request, project=None):
         return render_to_string('hipchat_sentry_configure_plugin.html', dict(
@@ -81,7 +81,21 @@ class HipchatNotifier(NotifyPlugin):
                 disable_plugin_for_tenant(project, tenant)
 
     def on_alert(self, alert, **kwargs):
-        pass
+        project = alert.project
+
+        tenants = Tenant.objects.filter(project=project)
+        for tenant in tenants:
+            ctx = Context.for_tenant(tenant)
+            message = (
+                '[ALERT] %(project_name)s %(message)s'
+                '[<a href="%(link)s">view</a>]'
+            ) % {
+                'project_name': '<strong>%s</strong>' % escape(project.name),
+                'message': escape(alert.message),
+                'link': alert.get_absolute_url(),
+            }
+            color = COLORS['ALERT']
+            ctx.send_notification(message, color=color, notify=True)
 
     def notify_users(self, group, event, fail_silently=False):
         project = event.project
