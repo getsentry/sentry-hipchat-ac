@@ -13,7 +13,7 @@ urlpatterns = patterns('',
     url('^configuration/$', views.configure,
         name='sentry-hipchat-config'),
 
-    url('^sidebar/event-details$', views.configure,
+    url('^sidebar/event-details$', views.event_details,
         name='sentry-hipchat-event-details'),
 
     url('^event/room-message$', views.on_room_message,

@@ -49,7 +49,7 @@ class DescriptorView(View):
                         'authentication': 'jwt',
                     }
                 ],
-                'webpanel': [
+                'webPanel': [
                     {
                         'key': 'sentry.sidebar.event-details',
                         'name': {
@@ -66,10 +66,7 @@ class DescriptorView(View):
                         'name': {
                             'value': 'Show details',
                         },
-                        'target': {
-                            'key': 'sentry.sidebar.event-details',
-                            'type': 'sidebar',
-                        },
+                        'target': 'sentry.sidebar.event-details',
                         'location': 'hipchat.message.action',
                     }
                 ]
@@ -228,19 +225,33 @@ def configure(request, context):
             return HttpResponseRedirect(request.get_full_path())
 
     return render(request, 'hipchat_sentry_configure.html', {
+        'context': context,
         'tenant': context.tenant,
         'current_user': request.user,
         'grant_form': grant_form,
         'project_select_form': project_select_form,
         'available_orgs': list(context.tenant.organizations.all()),
-        'signed_request': context.signed_request,
         'hipchat_debug': IS_DEBUG,
     })
 
 
 @with_context
 def event_details(request, context):
-    return HttpResponse('Testing')
+    event = None
+    group = None
+    event_id = request.GET.get('event')
+
+    if event_id is not None:
+        event = context.get_event(event_id)
+        if event is None:
+            return HttpResponse('Bad Request', status=400)
+        group = event.group
+
+    return render(request, 'hipchat_sentry_event_details.html', {
+        'context': context,
+        'event': event,
+        'group': group,
+    })
 
 
 @webhook

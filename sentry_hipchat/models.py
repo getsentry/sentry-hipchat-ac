@@ -18,6 +18,8 @@ from urlparse import urlparse, urljoin
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
+from sentry.models import Event
+
 
 def base_url(url):
     result = urlparse(url)
@@ -275,6 +277,17 @@ class Context(object):
         if card is not None:
             data['card'] = card
         print self.post('room/%s/notification' % self.room_id, data).text
+
+    def get_event(self, event_id):
+        try:
+            event = Event.objects.get(pk=int(event_id))
+        except (ValueError, Event.DoesNotExist):
+            return None
+
+        rv = self.tenant.projects.filter(pk=event.project.id).first()
+        if rv is not None:
+            Event.objects.bind_nodes([event], 'data')
+            return event
 
 
 from .plugin import disable_plugin_for_tenant

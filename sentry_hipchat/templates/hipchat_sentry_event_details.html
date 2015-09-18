@@ -1,0 +1,17 @@
+{% extends "hipchat_sentry_layout.html"  %}
+{% block body %}
+  <script>
+    AP.register({
+      "message.sentry.event-details": function(message) {
+        var token = $('meta[name="token"]').attr('value');
+        var event = message.metadata.event;
+        document.location.search = 'signed_request=' + encodeURIComponent(token) + '&event=' + event;
+      }
+    });
+  </script>
+  {% if event %}
+    <h1>Event Group {{ group.id }}</h1>
+    <p><a href="{{ group.get_absolute_url }}" target="_blank">View in Sentry</a>
+    <p>TODO: render event stack trace and info here
+  {% endif %}
+{% endblock %}
