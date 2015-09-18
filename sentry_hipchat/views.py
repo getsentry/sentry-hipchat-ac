@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 import requests
 from functools import update_wrapper
@@ -16,11 +15,7 @@ from sentry.models import Organization, Team
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
-
-
-'''
-https://c00cc4c7.ngrok.io/hipchat/
-'''
+from .cards import make_event_notification
 
 
 class DescriptorView(View):
@@ -52,6 +47,30 @@ class DescriptorView(View):
                         'url': absolute_uri(reverse('sentry-hipchat-room-message')),
                         'pattern': 'sentry[,:]',
                         'authentication': 'jwt',
+                    }
+                ],
+                'webpanel': [
+                    {
+                        'key': 'sentry.sidebar.event-details',
+                        'name': {
+                            'value': 'Sentry Event Details',
+                        },
+                        'location': 'hipchat.sidebar.right',
+                        'url': absolute_uri(reverse(
+                            'sentry-hipchat-event-details')),
+                    }
+                ],
+                'action': [
+                    {
+                        'key': 'message.sentry.event-details',
+                        'name': {
+                            'value': 'Show details',
+                        },
+                        'target': {
+                            'key': 'sentry.sidebar.event-details',
+                            'type': 'sidebar',
+                        },
+                        'location': 'hipchat.message.action',
                     }
                 ]
             },
@@ -219,60 +238,17 @@ def configure(request, context):
     })
 
 
+@with_context
+def event_details(request, context):
+    return HttpResponse('Testing')
+
+
 @webhook
 def on_room_message(request, context, data):
-    card = {
-        'style': 'application',
-        'url': 'http://www.getsentry.com/whatever',
-        'id': 'sentry/whatever',
-        'title': u"Error processing 'rule_notify' on 'TwilioPlugin': 'NoneType' object …",
-        'description': 'This is the description. <em>test</em>',
-        'images': {},
-        'icon': {
-            'url': 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
-        },
-        'metadata': {},
-        'attributes': [
-            {
-                'label': 'level',
-                'value': {
-                    'label': 'error',
-                    'style': 'lozenge-error'
-                },
-            },
-            {
-                'label': 'logger',
-                'value': {
-                    'label': 'sentry',
-                },
-            },
-            {
-                'label': 'release',
-                'value': {
-                    'label': 'f1b6abfce3359d1f71ebbe5cda2469854a72d127',
-                },
-            },
-            {
-                'label': 'server_name',
-                'value': {
-                    'label': 'worker-1',
-                },
-            }
-        ],
-        'activity': {
-            'html': '''
-            <p>
-            <img src="https://beta.getsentry.com/_static/sentry/images/favicon.ico" style="width: 16px; height: 16px">
-                <strong>New Sentry Event</strong>
-            <p><code>Error processing 'rule_notify' on 'TwilioPlugin': 'NoneType' object has no attribute 'split'</code>
-            <p><strong>Project:</strong>
-                <span class="aui-icon aui-icon-small aui-iconfont-devtools-submodule"></span>
-                <a href="#">Sentry Backend</a>
-            <p><strong>Culprit:</strong>
-            <em>sentry_twilio/models.py</em> in <em>notify_users</em> at line <em>99</em>
-            '''
-        },
-        'html': 'aha',
-    }
-    context.send_notification('Hello <em>World</em>!', color='green', card=card)
+    from sentry.models import Event
+    event = Event.objects.first()
+    Event.objects.bind_nodes([event], 'data')
+    group = event.group
+    context.send_notification(**make_event_notification(
+        group, event, context.tenant))
     return HttpResponse('', status=204)

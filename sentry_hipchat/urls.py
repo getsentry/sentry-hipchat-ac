@@ -13,6 +13,9 @@ urlpatterns = patterns('',
     url('^configuration/$', views.configure,
         name='sentry-hipchat-config'),
 
+    url('^sidebar/event-details$', views.configure,
+        name='sentry-hipchat-event-details'),
+
     url('^event/room-message$', views.on_room_message,
         name='sentry-hipchat-room-message')
 )
