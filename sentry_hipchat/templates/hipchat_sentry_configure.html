@@ -12,7 +12,7 @@
       {% if tenant.auth_user %}
         <h3>Organizations</h3>
         <p>
-          This room is authenticated as {{ tenant.auth_user.username }} and has
+          This room is authenticated as <strong>{{ tenant.auth_user.username }}</strong> and has
           access to the following organizations:
         <ul class="generic-list">
           {% for org in available_orgs %}
