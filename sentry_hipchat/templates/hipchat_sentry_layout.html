@@ -9,6 +9,10 @@
     <script src="{% url 'sentry-media' "sentry_hipchat" "js/iframe.js" %}"></script>
   </head>
   <body>
-    {% block body %}{% endblock %}
+    <div id="page">
+      <section id="content" role="main">
+        {% block body %}{% endblock %}
+      </section>
+    </div>
   </body>
 </html>

@@ -1,4 +1,5 @@
 {% extends "hipchat_sentry_layout.html"  %}
+{% load sentry_helpers %}
 {% block body %}
   <script>
     AP.register({
@@ -10,8 +11,32 @@
     });
   </script>
   {% if event %}
-    <h1>Event Group {{ group.id }}</h1>
-    <p><a href="{{ group.get_absolute_url }}" target="_blank">View in Sentry</a>
-    <p>TODO: render event stack trace and info here
+    <div class="aui-page-panel">
+      <div class="aui-page-panel-inner">
+        <section class="aui-page-panel-content">
+          <h3>{{ event.error }}</h3>
+          <p class="culprit">{{ event.culprit }}
+          <p><a href="{{ group.get_absolute_url }}" target="_blank">View in Sentry</a>
+          {% url 'sentry-stream' group.project.organization.slug group.project.slug as project_link %}
+
+          <ul class="tag-list">
+          {% for tag_key, tag_value in tags %}
+            <li>
+              <strong>{{ tag_key }}</strong>
+              <em>=</em>
+              <span><a href="{% absolute_uri project_link %}?{{ tag_key }}={{ tag_value }}">{{ tag_value }}</a> {% if tag_value|is_url %}<a href="{{ tag_value }}" class="icon-share"></a>{% endif %}</span>
+            </li>
+          {% endfor %}
+          </ul>
+
+          {% for label, html, _ in interfaces %}
+          <div class="interface">
+            <h4 class="title">{{ label }}</h4>
+          {{ html }}
+          </div>
+          {% endfor %}
+        </section>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}

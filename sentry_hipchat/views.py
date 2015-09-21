@@ -5,6 +5,7 @@ from django import forms
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils.html import mark_safe
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -27,6 +28,9 @@ class DescriptorView(View):
             'description': 'Sentry integration for Hipchat.',
             'links': {
                 'self': absolute_uri(reverse('sentry-hipchat-descriptor')),
+            },
+            'icon': {
+                'url': 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
             },
             'capabilities': {
                 'installable': {
@@ -239,6 +243,8 @@ def configure(request, context):
 def event_details(request, context):
     event = None
     group = None
+    interface_list = []
+    tags = []
     event_id = request.GET.get('event')
 
     if event_id is not None:
@@ -247,17 +253,29 @@ def event_details(request, context):
             return HttpResponse('Bad Request', status=400)
         group = event.group
 
+        tags = event.get_tags()
+        for interface in event.interfaces.itervalues():
+            body = interface.to_email_html(event)
+            if not body:
+                continue
+            text_body = interface.to_string(event)
+            interface_list.append(
+                (interface.get_title(), mark_safe(body), text_body)
+            )
+
     return render(request, 'hipchat_sentry_event_details.html', {
         'context': context,
         'event': event,
         'group': group,
+        'interfaces': interface_list,
+        'tags': tags,
     })
 
 
 @webhook
 def on_room_message(request, context, data):
     from sentry.models import Event
-    event = Event.objects.first()
+    event = Event.objects.get(pk=10)
     Event.objects.bind_nodes([event], 'data')
     group = event.group
     context.send_notification(**make_event_notification(
