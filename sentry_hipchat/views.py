@@ -160,11 +160,10 @@ class ProjectSelectForm(forms.Form):
 
     def __init__(self, tenant, request):
         self.tenant = tenant
-        all_orgs = Organization.objects.get_for_user(tenant.auth_user)
         project_choices = []
         self.projects_by_id = {}
 
-        for org in all_orgs:
+        for org in tenant.organizations.all():
             teams = Team.objects.get_for_user(org, tenant.auth_user,
                                               with_projects=True)
             for team, projects in teams:
