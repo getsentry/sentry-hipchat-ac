@@ -11,11 +11,16 @@ COLORS = {
 }
 
 
-def make_event_notification(group, event, tenant):
+def make_event_notification(group, event, tenant, new=True):
     project = event.project
     level = group.get_level_display().upper()
     link = group.get_absolute_url()
     color = COLORS.get(level, 'purple')
+
+    if new:
+        title = 'New Sentry Event'
+    else:
+        title = 'Sentry Event'
 
     # Legacy message
     message = (
@@ -66,7 +71,7 @@ def make_event_notification(group, event, tenant):
             <p>
             <a href="%(link)s">
                 <img src="https://beta.getsentry.com/_static/sentry/images/favicon.ico" style="width: 16px; height: 16px">
-                <strong>New Sentry Event</strong></a>
+                <strong>%(title)s</strong></a>
             <p><a href="%(link)s"><code>%(err)s</code></a>
             <p><strong>Project:</strong>
                 <span class="aui-icon aui-icon-small aui-iconfont-devtools-submodule"></span>
@@ -74,6 +79,7 @@ def make_event_notification(group, event, tenant):
             <p><strong>Culprit:</strong>
             <em>%(culprit)s</em>
             ''' % {
+                'title': title,
                 'link': escape(link),
                 'err': escape(event.error()),
                 'project': escape(project.name),

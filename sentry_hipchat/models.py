@@ -18,7 +18,7 @@ from urlparse import urlparse, urljoin
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
-from sentry.models import Event
+from sentry.models import Event, Group
 
 
 def base_url(url):
@@ -278,16 +278,44 @@ class Context(object):
             data['card'] = card
         print self.post('room/%s/notification' % self.room_id, data).text
 
+    def _ensure_and_bind_event(self, event):
+        rv = self.tenant.projects.filter(pk=event.project.id).first()
+        if rv is not None:
+            Event.objects.bind_nodes([event], 'data')
+            return event
+
     def get_event(self, event_id):
         try:
             event = Event.objects.get(pk=int(event_id))
         except (ValueError, Event.DoesNotExist):
             return None
+        return self._ensure_and_bind_event(event)
 
-        rv = self.tenant.projects.filter(pk=event.project.id).first()
-        if rv is not None:
-            Event.objects.bind_nodes([event], 'data')
-            return event
+    def get_event_from_url_params(self, group_id, event_id=None, slug_vars=None):
+        if event_id is not None:
+            try:
+                event = Event.objects.get(pk=int(event_id))
+            except (ValueError, Event.DoesNotExist):
+                return None
+            group = event.group
+            if str(group.id) != group.id:
+                return None
+        else:
+            try:
+                group = Group.objects.get(pk=int(group_id))
+            except (ValueError, Group.DoesNotExist):
+                return None
+            event = group.get_latest_event()
+        event = self._ensure_and_bind_event(event)
+        if event is None:
+            return None
+
+        if slug_vars is not None:
+            if slug_vars['org_slug'] != group.organization.slug or \
+               slug_vars['proj_slug'] != group.project.slug:
+                return None
+
+        return event
 
 
 from .plugin import disable_plugin_for_tenant

@@ -16,6 +16,6 @@ urlpatterns = patterns('',
     url('^sidebar/event-details$', views.event_details,
         name='sentry-hipchat-event-details'),
 
-    url('^event/room-message$', views.on_room_message,
-        name='sentry-hipchat-room-message')
+    url('^event/link-message$', views.on_link_message,
+        name='sentry-hipchat-link-message')
 )

@@ -1,11 +1,12 @@
+import re
 import json
 import requests
 from functools import update_wrapper
 from django import forms
+from django.conf import settings
 from django.views.generic import View
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.utils.html import mark_safe
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -17,6 +18,13 @@ from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
 from .cards import make_event_notification
+
+
+_link_pattern = re.escape(settings.SENTRY_URL_PREFIX) \
+    .replace('https\\:', 'https?\\:') + '/'
+_link_re = re.compile(_link_pattern +
+    r'(?P<org>[^/]+)/(?P<proj>[^/]+)/group/'
+    r'(?P<group>[^/]+)(/events/(?P<event>[^/]+)|/?)')
 
 
 class DescriptorView(View):
@@ -48,10 +56,10 @@ class DescriptorView(View):
                 'webhook': [
                     {
                         'event': 'room_message',
-                        'url': absolute_uri(reverse('sentry-hipchat-room-message')),
-                        'pattern': 'sentry[,:]',
+                        'url': absolute_uri(reverse('sentry-hipchat-link-message')),
+                        'pattern': _link_pattern,
                         'authentication': 'jwt',
-                    }
+                    },
                 ],
                 'webPanel': [
                     {
@@ -243,7 +251,7 @@ def configure(request, context):
 def event_details(request, context):
     event = None
     group = None
-    interface_list = []
+    interface_data = {}
     tags = []
     event_id = request.GET.get('event')
 
@@ -254,30 +262,38 @@ def event_details(request, context):
         group = event.group
 
         tags = event.get_tags()
-        for interface in event.interfaces.itervalues():
-            body = interface.to_email_html(event)
-            if not body:
-                continue
-            text_body = interface.to_string(event)
-            interface_list.append(
-                (interface.get_title(), mark_safe(body), text_body)
-            )
+
+        interface_data.update(
+            http=event.interfaces.get('sentry.interfaces.Http'),
+            user=event.interfaces.get('sentry.interfaces.User'),
+        )
+        exc = event.interfaces.get('sentry.interfaces.Exception')
+        if exc is not None:
+            interface_data['exc'] = exc
+            interface_data['exc_as_string'] = exc.to_string(event)
 
     return render(request, 'hipchat_sentry_event_details.html', {
         'context': context,
         'event': event,
         'group': group,
-        'interfaces': interface_list,
+        'interfaces': interface_data,
         'tags': tags,
     })
 
 
 @webhook
-def on_room_message(request, context, data):
-    from sentry.models import Event
-    event = Event.objects.get(pk=10)
-    Event.objects.bind_nodes([event], 'data')
-    group = event.group
-    context.send_notification(**make_event_notification(
-        group, event, context.tenant))
+def on_link_message(request, context, data):
+    match = _link_re.search(data['item']['message']['message'])
+    if match is not None:
+        params = match.groupdict()
+        event = context.get_event_from_url_params(
+            group_id=params['group'],
+            event_id=params['event'],
+            slug_vars={'org_slug': params['org'],
+                       'proj_slug': params['proj']}
+        )
+        if event is not None:
+            context.send_notification(**make_event_notification(
+                event.group, event, context.tenant, new=False))
+
     return HttpResponse('', status=204)
