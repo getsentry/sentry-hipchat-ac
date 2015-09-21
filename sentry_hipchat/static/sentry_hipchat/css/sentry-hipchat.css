@@ -93,7 +93,8 @@ a:visited {
   margin-bottom: 3px;
   background: #f7f8f9;
   border-radius: 3px;
-  padding: 10px;
+  padding: 10px 15px;
+  font-weight: 500;
 }
 
 .generic-list label {
@@ -103,7 +104,7 @@ a:visited {
 }
 
 .generic-list li label {
-  font-weight: 400;
+  font-weight: 500;
   margin-bottom: 0;
   font-size: 100%;
 }
