@@ -68,10 +68,16 @@ a:visited {
   line-height: 1;
   padding: 10px 20px;
   text-decoration: none;
-  color: #fff;
+  color: #fff !important;
   background-color: #15a7f6;
   border: 1px solid #0780c2;
   margin-top: 5px;
+}
+
+.btn.centered {
+  display: block;
+  margin: 20px auto;
+  width: 160px;
 }
 
 /* Lists */
