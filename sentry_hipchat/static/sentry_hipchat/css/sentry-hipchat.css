@@ -1,0 +1,113 @@
+/*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:bold}dfn{font-style:italic}h1{font-size:2em;margin:.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}sub{bottom:-0.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace,monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type="checkbox"],input[type="radio"]{box-sizing:border-box;padding:0}input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{height:auto}input[type="search"]{-webkit-appearance:textfield;box-sizing:content-box}input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}legend{border:0;padding:0}textarea{overflow:auto}optgroup{font-weight:bold}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}
+
+
+/* Type */
+
+body {
+  color: #3d4649;
+  font-size: 16px;
+  font-family: "Avenir Next", "Avenir", helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6, p, ul, ol, pre {
+  margin: 0 0 15px;
+}
+
+h1 {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+strong {
+  font-weight: 600;
+}
+
+.centered {
+  text-align: center;
+}
+
+.intro {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+a {
+  color: #0ca3f6;
+}
+
+a:hover,
+a:active,
+a:visited {
+  color: #0779b8;
+}
+
+/* Layout */
+
+#page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 10px 0;
+}
+
+/* Forms */
+
+.btn {
+  background: none;
+  border-radius: 3px;
+  line-height: 1;
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #fff;
+  background-color: #15a7f6;
+  border: 1px solid #0780c2;
+  margin-top: 5px;
+}
+
+/* Lists */
+
+.generic-list,
+.generic-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.generic-list li {
+  line-height: 1;
+  margin-bottom: 3px;
+  background: #f7f8f9;
+  border-radius: 3px;
+  padding: 10px;
+}
+
+.generic-list label {
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.generic-list li label {
+  font-weight: 400;
+  margin-bottom: 0;
+  font-size: 100%;
+}
+
+.generic-list li label input {
+  margin-right: 5px;
+}
+
+.sentry-logo {
+  display: block;
+  width: 120px;
+  margin: 0 auto 30px;
+}
