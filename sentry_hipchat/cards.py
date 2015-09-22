@@ -2,8 +2,8 @@
 from django.utils.html import escape
 
 
-ICON = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
-ICON2X = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+ICON = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
+ICON2X = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
 
 COLORS = {
     'ALERT': 'red',
