@@ -376,7 +376,8 @@ def event_details(request, context):
             return HttpResponse('Bad Request', status=400)
         group = event.group
 
-        tags = event.get_tags()
+        tags = [(k.split(':', 1)[1] if k.startswith('sentry:') else k,
+                 v) for k, v in event.get_tags()]
 
         interface_data.update(
             http=event.interfaces.get('sentry.interfaces.Http'),
