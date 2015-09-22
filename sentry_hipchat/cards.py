@@ -87,12 +87,11 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             <a href="%(link)s">
                 <img src="%(icon)s" style="width: 16px; height: 16px">
                 <strong>%(title)s</strong></a>
-            <p><a href="%(link)s"><code>%(err)s</code></a>
-            <p><strong>Project:</strong>
-                <span class="aui-icon aui-icon-small aui-iconfont-devtools-submodule"></span>
+            <p><a href="%(link)s">%(err)s</a>
+            <p><strong><code>Project:</code></strong>
                 <a href="%(project_link)s">%(project)s</a>
-            <p><strong>Culprit:</strong>
-            <em>%(culprit)s</em>
+            <p><strong><code>Culprit:</code></strong>
+                %(culprit)s
             ''' % {
                 'title': title,
                 'icon': ICON,
