@@ -2,6 +2,9 @@
 from django.utils.html import escape
 
 
+ICON = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+ICON2X = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+
 COLORS = {
     'ALERT': 'red',
     'ERROR': 'red',
@@ -68,7 +71,8 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
         'description': 'An error ocurred.',
         'images': {},
         'icon': {
-            'url': 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+            'url': ICON,
+            'url@2x': ICON2X,
         },
         'metadata': {
             'event': str(event.id),
@@ -79,7 +83,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             'html': '''
             <p>
             <a href="%(link)s">
-                <img src="https://beta.getsentry.com/_static/sentry/images/favicon.ico" style="width: 16px; height: 16px">
+                <img src="%(icon)s" style="width: 16px; height: 16px">
                 <strong>%(title)s</strong></a>
             <p><a href="%(link)s"><code>%(err)s</code></a>
             <p><strong>Project:</strong>
@@ -89,6 +93,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             <em>%(culprit)s</em>
             ''' % {
                 'title': title,
+                'icon': ICON,
                 'link': escape(link),
                 'err': escape(event.error()),
                 'project': escape(project.name),

@@ -18,7 +18,7 @@ from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
 from .cards import make_event_notification, make_generic_notification, \
-     make_subscription_update_notification
+     make_subscription_update_notification, ICON, ICON2X
 
 
 _link_pattern = re.escape(settings.SENTRY_URL_PREFIX) \
@@ -26,10 +26,6 @@ _link_pattern = re.escape(settings.SENTRY_URL_PREFIX) \
 _link_re = re.compile(_link_pattern +
     r'(?P<org>[^/]+)/(?P<proj>[^/]+)/group/'
     r'(?P<group>[^/]+)(/events/(?P<event>[^/]+)|/?)')
-
-
-ICON = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
-ICON2X = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
 
 
 class DescriptorView(View):
