@@ -88,7 +88,7 @@ class DescriptorView(View):
                         'name': {
                             'value': 'Show details',
                         },
-                        'target': 'sentry.sidebar.event-details',
+                        'target': 'sentry-event-details-glance',
                         'location': 'hipchat.message.action',
                         'conditions': [
                             {
@@ -104,6 +104,29 @@ class DescriptorView(View):
                     }
                 ],
                 'glance': [
+                    # Invisible dummy glance for normal sidebars
+                    {
+                        'name': {
+                            'value': 'Sentry Event Details',
+                        },
+                        'key': 'sentry-event-details-glance',
+                        'target': 'sentry.sidebar.event-details',
+                        'icon': {
+                            'url': ICON,
+                            'url@2x': ICON2X,
+                        },
+                        'conditions': [
+                            {
+                                'condition': 'glance_matches',
+                                "params": {
+                                    "metadata": [
+                                        {"attr": "this_is_a_dummy",
+                                         "eq": True}
+                                    ]
+                                }
+                            }
+                        ],
+                    },
                     {
                         'name': {
                             'value': 'Sentry',
