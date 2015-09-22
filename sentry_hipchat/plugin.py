@@ -1,4 +1,5 @@
 import sentry_hipchat
+from urllib import quote as url_quote
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -79,7 +80,9 @@ class HipchatNotifier(NotifyPlugin):
         return render_to_string('hipchat_sentry_configure_plugin.html', dict(
             on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
             tenants=list(project.hipchat_tenant_set.all()),
-            descriptor=absolute_uri('/api/hipchat/')))
+            descriptor=absolute_uri('/api/hipchat/'),
+            install_url='https://www.hipchat.com/addons/install?url=' +
+            url_quote(absolute_uri('/api/hipchat/'))))
 
     def disable(self, project=None, user=None):
         was_enabled = self.get_option('enabled', project)

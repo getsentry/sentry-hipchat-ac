@@ -7,9 +7,13 @@
   remove them, you need to use the integration configuration page.
 {% if on_premise %}
 <p>
-  To add the Sentry integration to Hipchat click on “Install an integration
-  from a descriptor URL” on your room in Hipchat and add the following
-  descriptor URL:
+  If you use the cloud hosted hipchat installation, you can on-click
+  install the integration:
+<a href="{{ install_url }}" target="_blank">Enable Integration</a>.
+<p>
+  Alternatively to add the Sentry integration to Hipchat click on “Install an
+  integration from a descriptor URL” on your room in Hipchat and add the
+  following descriptor URL:
 <pre>{{ descriptor }}</pre>
 {% endif %}
 <h2>Active Rooms</h2>
