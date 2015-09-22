@@ -13,12 +13,17 @@ import requests
 
 from django.db import models
 from django.core.cache import cache
+from django.utils import timezone
 from urlparse import urlparse, urljoin
 
 from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
 from sentry.models import Event, Group
+
+
+MAX_RECENT = 15
+RECENT_HOURS = 12
 
 
 def base_url(url):
@@ -35,6 +40,48 @@ class OauthClientInvalidError(Exception):
 
 class BadTenantError(Exception):
     pass
+
+
+class MentionedEventManager(models.Manager):
+
+    def recent(self, tenant):
+        return MentionedEvent.objects.order_by('-last_mentioned') \
+            .filter(tenant=tenant, last_mentioned__gt=timezone.now() -
+                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT]
+
+    def count(self, tenant):
+        return MentionedEvent.objects \
+            .filter(tenant=tenant, last_mentioned__gt=timezone.now() -
+                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT].count()
+
+    def mention(self, project, group, tenant, event=None):
+        try:
+            evt = MentionedEvent.objects.get(
+                project=project,
+                group=group,
+                tenant=tenant
+            )
+        except MentionedEvent.DoesNotExist:
+            evt = MentionedEvent.objects.create(
+                project=project,
+                group=group,
+                event=event,
+                tenant=tenant
+            )
+        else:
+            evt.last_mentioned = timezone.now()
+            if event is not None:
+                evt.event = event
+            evt.save()
+            return evt
+
+        old_events = MentionedEvent.objects.filter(
+            tenant=tenant,
+        ).order_by('-last_mentioned')[MAX_RECENT:]
+        for old_event in old_events:
+            old_event.delete()
+
+        return evt
 
 
 class TenantManager(models.Manager):
@@ -92,6 +139,19 @@ class TenantManager(models.Manager):
         raise BadTenantError('Could not find tenant')
 
 
+class MentionedEvent(models.Model):
+    objects = MentionedEventManager()
+    project = models.ForeignKey(
+        'sentry.Project', related_name='hipchat_mentioned_events')
+    group = models.ForeignKey(
+        'sentry.Group', related_name='hipchat_mentioned_groups')
+    event = models.ForeignKey(
+        'sentry.Event', related_name='hipchat_mentioned_events',
+        null=True)
+    tenant = models.ForeignKey('sentry_hipchat.Tenant')
+    last_mentioned = models.DateTimeField(default=timezone.now)
+
+
 class Tenant(models.Model):
     objects = TenantManager()
     id = models.CharField(max_length=40, primary_key=True)
@@ -106,7 +166,8 @@ class Tenant(models.Model):
     api_base_url = models.CharField(max_length=250)
     installed_from = models.CharField(max_length=250)
 
-    auth_user = models.ForeignKey('sentry.User', null=True)
+    auth_user = models.ForeignKey('sentry.User', null=True,
+                                  related_name='hipchat_tenant_set')
     organizations = models.ManyToManyField(
         'sentry.Organization', related_name='hipchat_tenant_set')
     projects = models.ManyToManyField(
@@ -163,7 +224,21 @@ class Tenant(models.Model):
     def delete(self, *args, **kwargs):
         for project in self.projects.all():
             disable_plugin_for_tenant(project, self)
+        MentionedEvent.objects.filter(
+            tenant=self
+        ).delete()
         models.Model.delete(self, *args, **kwargs)
+
+    def clear(self, commit=True):
+        self.auth_user = None
+        self.organizations.clear()
+        MentionedEvent.objects.filter(
+            tenant=self
+        ).delete()
+        for project in self.projects.all():
+            disable_plugin_for_tenant(project, self)
+        if commit:
+            self.save()
 
     def update_room_info(self, commit=True):
         headers = {
@@ -277,6 +352,24 @@ class Context(object):
         if card is not None:
             data['card'] = card
         print self.post('room/%s/notification' % self.room_id, data).text
+
+    def get_main_glance(self):
+        count = MentionedEvent.objects.count(self.tenant)
+        return {
+            'label': {
+                'type': 'html',
+                'value': '<b>%s</b> Recent Sentry Event%s' % (
+                    count, count != 1 and 's' or '')
+            },
+        }
+
+    def push_main_glance(self):
+        print self.post('addon/ui/room/%s' % self.room_id, {
+            'glance': [{
+                'content': self.get_main_glance(),
+                'key': 'sentry-main-glance',
+            }]
+        }).text
 
     def _ensure_and_bind_event(self, event):
         rv = self.tenant.projects.filter(pk=event.project.id).first()

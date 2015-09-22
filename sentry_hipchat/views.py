@@ -15,7 +15,7 @@ from sentry.utils.http import absolute_uri
 from sentry.models import Organization, Team
 
 from .utils import JsonResponse, IS_DEBUG
-from .models import Tenant, Context
+from .models import Tenant, Context, MentionedEvent
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
 from .cards import make_event_notification, make_generic_notification, \
      make_subscription_update_notification, ICON, ICON2X
@@ -330,11 +330,7 @@ def sign_out(request, context):
     if tenant.auth_user is None or 'no' in request.POST:
         return HttpResponseRedirect(cfg_url)
     elif request.method == 'POST':
-        tenant.auth_user = None
-        tenant.organizations.clear()
-        for project in tenant.projects.all():
-            disable_plugin_for_tenant(project, tenant)
-        tenant.save()
+        tenant.clear()
         notify_tenant_removal(tenant)
         return HttpResponseRedirect(cfg_url)
 
@@ -347,19 +343,7 @@ def sign_out(request, context):
 @cors
 @with_context
 def main_glance(request, context):
-    return JsonResponse({
-        'label': {
-            'type': 'html',
-            'value': '<b>10</b> Recent Sentry Events',
-        },
-        'status': {
-            'type': 'lozenge',
-            'value': {
-                'label': 'COOL',
-                'type': 'current',
-            }
-        },
-    })
+    return JsonResponse(context.get_main_glance())
 
 
 @with_context
@@ -399,7 +383,11 @@ def event_details(request, context):
 
 @with_context
 def recent_events(request, context):
-    return HttpResponse('TODO: implement me')
+    events = MentionedEvent.objects.recent(context.tenant)
+    return render(request, 'hipchat_sentry_recent_events.html', {
+        'context': context,
+        'events': events,
+    })
 
 
 @webhook
@@ -417,6 +405,14 @@ def on_link_message(request, context, data):
             context.send_notification(**make_event_notification(
                 event.group, event, context.tenant, new=False,
                 event_target=params['event'] is not None))
+
+            MentionedEvent.objects.mention(
+                project=event.project,
+                group=event.group,
+                tenant=context.tenant,
+                event=params['event'] and event or None,
+            )
+            context.push_main_glance()
 
     return HttpResponse('', status=204)
 

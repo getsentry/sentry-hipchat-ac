@@ -1,0 +1,13 @@
+{% extends "hipchat_sentry_layout.html"  %}
+{% load sentry_helpers %}
+{% block body %}
+  <div class="aui-page-panel">
+    <div class="aui-page-panel-inner">
+      <section class="aui-page-panel-content">
+        {% for event in events %}
+          <p><a href="{{ event.group.get_absolute_url }}">{{ event.group.id }}</a>
+        {% endfor %}
+      </section>
+    </div>
+  </div>
+{% endblock %}
