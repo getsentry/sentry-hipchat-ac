@@ -51,13 +51,13 @@ strong {
   font-weight: 600;
 }
 
-a {
+a,
+a:visited {
   color: #0ca3f6;
 }
 
 a:hover,
-a:active,
-a:visited {
+a:active {
   color: #0779b8;
 }
 
@@ -122,6 +122,11 @@ table td {
   display: block;
   margin: 20px auto;
   width: 160px;
+}
+
+.btn.orange {
+  background: #fb4226;
+  border-color: #bf3a26;
 }
 
 .btn.cancel {
