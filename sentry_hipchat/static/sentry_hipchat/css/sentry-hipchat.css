@@ -238,7 +238,10 @@ table td {
   margin: 0;
 }
 
+.event-list p {
+  line-height: 1.6;
+}
+
 .event-list p.meta {
   font-size: 90%;
-  color: #738094;
 }
