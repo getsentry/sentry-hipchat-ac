@@ -58,6 +58,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
                 attr['value']['style'] = attr_color
         elif key == 'release':
             attr['value']['style'] = 'lozenge-new'
+        attributes.append(attr)
 
     card = {
         'style': 'application',
@@ -71,6 +72,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
         },
         'metadata': {
             'event': str(event.id),
+            'sentry_message_type': 'event',
         },
         'attributes': attributes,
         'activity': {

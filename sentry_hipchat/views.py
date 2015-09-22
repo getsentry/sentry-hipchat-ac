@@ -94,6 +94,17 @@ class DescriptorView(View):
                         },
                         'target': 'sentry.sidebar.event-details',
                         'location': 'hipchat.message.action',
+                        'conditions': [
+                            {
+                                'condition': 'card_matches',
+                                'params': {
+                                    'metadata': [
+                                        {'attr': 'sentry_message_type',
+                                         'eq': 'event'},
+                                     ]
+                                }
+                            }
+                        ],
                     }
                 ],
                 'glance': [
