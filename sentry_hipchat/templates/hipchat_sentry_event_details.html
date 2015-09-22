@@ -16,9 +16,10 @@
         <section class="aui-page-panel-content">
           <h3>{{ event.error }}</h3>
           <p class="culprit">{{ event.culprit }}
-          <p><a href="{{ group.get_absolute_url }}" target="_blank">View in Sentry</a>
+          <p><a href="{{ group.get_absolute_url }}" target="_blank" class="btn">View in Sentry</a>
           {% url 'sentry-stream' group.project.organization.slug group.project.slug as project_link %}
 
+          <hr>
           <ul class="tag-list">
           {% for tag_key, tag_value in tags %}
             <li>
@@ -30,6 +31,7 @@
           </ul>
 
           {% if interfaces.exc %}
+          <hr>
           <div class="interface">
             <h4 class="title">Exception</h4>
             <pre>{{ interfaces.exc_as_string }}</pre>
@@ -37,6 +39,7 @@
           {% endif %}
 
           {% if interfaces.http %}
+          <hr>
           <div class="interface">
             <h4 class="title">Request</h4>
             <table>
@@ -63,6 +66,7 @@
           {% endif %}
 
           {% if interfaces.user %}
+          <hr>
           <div class="interface">
             <h4 class="title">User</h4>
             <table>
