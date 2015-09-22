@@ -11,10 +11,17 @@ COLORS = {
 }
 
 
-def make_event_notification(group, event, tenant, new=True):
+def make_event_notification(group, event, tenant, new=True, event_target=False):
     project = event.project
     level = group.get_level_display().upper()
+
     link = group.get_absolute_url()
+    if event_target:
+        link = '%s/events/%s/' % (
+            link.rstrip('/'),
+            event.id
+        )
+
     color = COLORS.get(level, 'purple')
 
     if new:

@@ -28,6 +28,10 @@ _link_re = re.compile(_link_pattern +
     r'(?P<group>[^/]+)(/events/(?P<event>[^/]+)|/?)')
 
 
+ICON = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+ICON2X = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+
+
 class DescriptorView(View):
 
     def get(self, request):
@@ -39,7 +43,7 @@ class DescriptorView(View):
                 'self': absolute_uri(reverse('sentry-hipchat-descriptor')),
             },
             'icon': {
-                'url': 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
+                'url': ICON,
             },
             'capabilities': {
                 'installable': {
@@ -71,7 +75,16 @@ class DescriptorView(View):
                         'location': 'hipchat.sidebar.right',
                         'url': absolute_uri(reverse(
                             'sentry-hipchat-event-details')),
-                    }
+                    },
+                    {
+                        'key': 'sentry.sidebar.recent-events',
+                        'name': {
+                            'value': 'Recent Sentry Events',
+                        },
+                        'location': 'hipchat.sidebar.right',
+                        'url': absolute_uri(reverse(
+                            'sentry-hipchat-recent-events')),
+                    },
                 ],
                 'action': [
                     {
@@ -82,7 +95,23 @@ class DescriptorView(View):
                         'target': 'sentry.sidebar.event-details',
                         'location': 'hipchat.message.action',
                     }
-                ]
+                ],
+                'glance': [
+                    {
+                        'name': {
+                            'value': 'Sentry',
+                        },
+                        'queryUrl': absolute_uri(reverse(
+                            'sentry-hipchat-main-glance')),
+                        'key': 'sentry-main-glance',
+                        'target': 'sentry.sidebar.recent-events',
+                        'icon': {
+                            'url': ICON,
+                            'url@2x': ICON2X,
+                        },
+                        'conditions': [],
+                    }
+                ],
             },
             'vendor': {
                 'url': 'https://www.getsentry.com/',
@@ -110,6 +139,14 @@ class InstallableView(View):
             return HttpResponse('Mismatch on capabilities URL',
                                 status=400)
 
+        # Make sure we clean up an old existing tenant if we have one.
+        try:
+            old_tenant = Tenant.objects.get(pk=data['oauthId'])
+        except Tenant.DoesNotExist:
+            pass
+        else:
+            old_tenant.delete()
+
         tenant = Tenant.objects.create(
             id=data['oauthId'],
             room_id=room_id,
@@ -123,7 +160,6 @@ class InstallableView(View):
     def delete(self, request, oauth_id):
         try:
             tenant = Tenant.objects.get(pk=oauth_id)
-            notify_tenant_removal(tenant)
             tenant.delete()
         except Tenant.DoesNotExist:
             pass
@@ -213,17 +249,30 @@ class ProjectSelectForm(forms.Form):
 
 def webhook(f):
     @csrf_exempt
-    def new_f(request, **kwargs):
+    def new_f(request, *args, **kwargs):
         data = json.loads(request.body) or {}
         context = Context.for_request(request, data)
-        return f(request, context, data, **kwargs)
+        return f(request, context, data, *args, **kwargs)
     return update_wrapper(new_f, f)
 
 
 def with_context(f):
-    def new_f(request, **kwargs):
+    def new_f(request, *args, **kwargs):
         context = Context.for_request(request)
-        return f(request, context, **kwargs)
+        return f(request, context, *args, **kwargs)
+    return update_wrapper(new_f, f)
+
+
+def cors(f):
+    def new_f(request, *args, **kwargs):
+        origin = request.META.get('HTTP_ORIGIN')
+        resp = f(request, *args, **kwargs)
+        resp['Access-Control-Allow-Origin'] = origin
+        resp['Access-Control-Request-Method'] = 'GET, HEAD, OPTIONS'
+        resp['Access-Control-Allow-Headers'] = 'X-Requested-With'
+        resp['Access-Control-Allow-Credentials'] = 'true'
+        resp['Access-Control-Max-Age'] = '1728000'
+        return resp
     return update_wrapper(new_f, f)
 
 
@@ -288,6 +337,24 @@ def sign_out(request, context):
     })
 
 
+@cors
+@with_context
+def main_glance(request, context):
+    return JsonResponse({
+        'label': {
+            'type': 'html',
+            'value': '<b>10</b> Recent Sentry Events',
+        },
+        'status': {
+            'type': 'lozenge',
+            'value': {
+                'label': 'COOL',
+                'type': 'current',
+            }
+        },
+    })
+
+
 @with_context
 def event_details(request, context):
     event = None
@@ -322,6 +389,11 @@ def event_details(request, context):
     })
 
 
+@with_context
+def recent_events(request, context):
+    return HttpResponse('TODO: implement me')
+
+
 @webhook
 def on_link_message(request, context, data):
     match = _link_re.search(data['item']['message']['message'])
@@ -335,7 +407,8 @@ def on_link_message(request, context, data):
         )
         if event is not None:
             context.send_notification(**make_event_notification(
-                event.group, event, context.tenant, new=False))
+                event.group, event, context.tenant, new=False,
+                event_target=params['event'] is not None))
 
     return HttpResponse('', status=204)
 
