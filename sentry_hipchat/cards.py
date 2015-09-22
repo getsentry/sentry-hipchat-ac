@@ -45,6 +45,8 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
 
     attributes = []
     for key, value in event.tags:
+        if key.startswith('sentry:'):
+            key = key.split(':', 1)[1]
         attr = {
             'label': key,
             'value': {'label': value}
@@ -60,7 +62,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             if attr_color is not None:
                 attr['value']['style'] = attr_color
         elif key == 'release':
-            attr['value']['style'] = 'lozenge-new'
+            attr['value']['style'] = 'lozenge-success'
         attributes.append(attr)
 
     card = {
