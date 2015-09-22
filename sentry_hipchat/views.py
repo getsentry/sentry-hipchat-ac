@@ -33,8 +33,8 @@ class DescriptorView(View):
     def get(self, request):
         return JsonResponse({
             'key': 'hipchat-sentry',
-            'name': 'Sentry for Hipchat',
-            'description': 'Sentry integration for Hipchat.',
+            'name': 'Sentry for HipChat',
+            'description': 'Sentry integration for HipChat.',
             'links': {
                 'self': absolute_uri(reverse('sentry-hipchat-descriptor')),
             },
