@@ -4,6 +4,7 @@ from django.utils.html import escape
 
 ICON = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
 ICON2X = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
+ICON_SM = 'https://beta.getsentry.com/_static/sentry/images/favicon.ico'
 
 COLORS = {
     'ALERT': 'red',
@@ -85,7 +86,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             'html': '''
             <p>
             <a href="%(link)s">
-                <img src="%(icon)s" style="width: 16px; height: 16px">
+                <img src="%(icon_sm)s" style="width: 16px; height: 16px">
                 <strong>%(title)s</strong></a>
             <p><a href="%(link)s">%(err)s</a>
             <p><strong><code>Project:</code></strong>
@@ -95,6 +96,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             ''' % {
                 'title': title,
                 'icon': ICON,
+                'icon_sm': ICON_SM,
                 'link': escape(link),
                 'err': escape(event.error()),
                 'project': escape(project.name),
