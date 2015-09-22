@@ -1,65 +1,48 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="token" value="{{ context.signed_request }}">
-    <script src="https://www.hipchat.com/atlassian-connect/all{% if hipchat_debug %}-debug{% endif %}.js"></script>
-    <link rel="stylesheet" href="https://www.hipchat.com/atlassian-connect/all{% if hipchat_debug %}-debug{% endif %}.css">
-    <link href="{% url 'sentry-media' "sentry_hipchat" "css/sentry-hipchat.css" %}" type="text/css" rel="stylesheet"/>
-  </head>
-  <body>
-      <div id="page">
-      {% if tenant.auth_user %}
-        <h3>Organizations</h3>
-        <p>
-          This room is authenticated as <strong>{{ tenant.auth_user.username }}</strong> and has
-          access to the following organizations:
-        <ul class="generic-list">
-          {% for org in available_orgs %}
-            <li class="generic-list-item">{{ org.name }}</li>
-          {% endfor %}
-        </ul>
-        <p>
-          To change the authentication you can remove the integration and
-          re-authenticate.
-        <h3>Notifications</h3>
-        <p>
-          Select the projects you want to notifications from:
-        <form action="" method="post">
-          {% csrf_token %}
-          <div class="generic-list">
-            {{ project_select_form }}
-          </div>
-          <button type="submit" class="btn">Save changes</button>
-        </form>
-      {% else %}
-        <img src="{% url 'sentry-media' "sentry_hipchat" "img/sentry-logo.png" %}" class="sentry-logo" />
-        <p class="intro">
-          Welcome to Sentry for Hipchat.  Before we can get going, you need to
-          associate this Hipchat room with a Sentry account.
-        {% if current_user.is_authenticated %}
-        <p>
-          You are currently signed in as <strong>{{ current_user.username }}</strong>.
-          <a href="{% url 'sentry-logout' %}">Change user?</a>
-        <h3>Grant Access</h3>
-        <p>
-          You can decide which organizations the integration will have access
-          to.  This cannot be changed later without removing and re-adding
-          the integration.  At a later point you can add or remove projects
-          within those organizations.
-        <form action="" method="post">
-          {% csrf_token %}
-          <div class="generic-list">
-            {{ grant_form }}
-          </div>
-          <button type="submit" class="btn">Grant access</button>
-        </form>
-        {% else %}
-        <p>
-          <a href="{% url 'sentry-login' %}" class="btn centered">Connect with Sentry</a>
-        </p>
-        {% endif %}
-      {% endif %}
-    </div>
-  </body>
-</html>
+{% extends "hipchat_sentry_configure_layout.html" %}
+{% block body %}
+  {% if tenant.auth_user %}
+    <h3>Authorization</h3>
+    <p>
+      This room is authenticated as <strong>{{ tenant.auth_user.username }}</strong> and
+      was authorized to have access to the following organizations:
+      {% for org in available_orgs %}
+        <strong>{{ org.name }}</strong>{% if not forloop.last %},{% endif %}
+      {% endfor %}
+      &nbsp; (<a href="{% url 'sentry-hipchat-sign-out' %}?signed_request={{ context.signed_request }}">Deauthorize</a>)
+    <h3>Notifications</h3>
+    <p>
+      Select the projects you want to notifications from:
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="generic-list">
+        {{ project_select_form.projects }}
+      </div>
+      <button type="submit" class="btn">Save changes</button>
+    </form>
+  {% else %}
+    <img src="{% url 'sentry-media' "sentry_hipchat" "img/sentry-logo.png" %}" class="sentry-logo" />
+    <p class="intro">
+      Welcome to Sentry for Hipchat.  Before we can get going, you need to
+      associate this Hipchat room with a Sentry account.
+    {% if current_user.is_authenticated %}
+    <p>
+      You are currently signed in as <strong>{{ current_user.username }}</strong>.
+      <a href="{% url 'sentry-logout' %}">Change user?</a>
+    <h3>Grant Access</h3>
+    <p>
+      You can decide which organizations the integration will have access to.
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="generic-list">
+        {{ grant_form.orgs.errors }}
+        {{ grant_form.orgs }}
+      </div>
+      <button type="submit" class="btn">Grant access</button>
+    </form>
+    {% else %}
+    <p>
+      <a href="{% url 'sentry-login' %}" class="btn centered">Connect with Sentry</a>
+    </p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

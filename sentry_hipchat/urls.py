@@ -12,6 +12,8 @@ urlpatterns = patterns('',
         views.InstallableView.as_view()),
     url('^configuration/$', views.configure,
         name='sentry-hipchat-config'),
+    url('^configuration/signout$', views.sign_out,
+        name='sentry-hipchat-sign-out'),
 
     url('^sidebar/event-details$', views.event_details,
         name='sentry-hipchat-event-details'),

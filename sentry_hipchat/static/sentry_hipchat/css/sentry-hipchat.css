@@ -80,6 +80,11 @@ a:visited {
   width: 160px;
 }
 
+.btn.cancel {
+  background: #e8535a;
+  border: 1px solid #c23037;
+}
+
 /* Lists */
 
 .generic-list,
@@ -115,6 +120,11 @@ a:visited {
 
 .sentry-logo {
   display: block;
-  width: 120px;
+  width: 96px;
   margin: 0 auto 30px;
+}
+
+.errorlist li {
+  background: #f9e6e7;
+  color: #e8535a;
 }

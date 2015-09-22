@@ -145,8 +145,12 @@ class GrantAccessForm(forms.Form):
         self.fields['orgs'].choices = org_choices
 
     def clean_orgs(self):
-        return [org for org in self.all_orgs if str(org.id) in
-                self.cleaned_data['orgs']]
+        rv = [org for org in self.all_orgs if str(org.id) in
+              self.cleaned_data['orgs']]
+        if not rv:
+            raise forms.ValidationError('You need to select at least one '
+                                        'organization to give access to.')
+        return rv
 
     def save_changes(self):
         self.tenant.auth_user = self.user
@@ -243,6 +247,30 @@ def configure(request, context):
         'project_select_form': project_select_form,
         'available_orgs': list(context.tenant.organizations.all()),
         'hipchat_debug': IS_DEBUG,
+    })
+
+
+@with_context
+def sign_out(request, context):
+    tenant = context.tenant
+    cfg_url = '%s?signed_request=%s' % (
+        reverse('sentry-hipchat-config'),
+        context.signed_request
+    )
+
+    if tenant.auth_user is None or 'no' in request.POST:
+        return HttpResponseRedirect(cfg_url)
+    elif request.method == 'POST':
+        tenant.auth_user = None
+        tenant.organizations.clear()
+        for project in tenant.projects.all():
+            disable_plugin_for_tenant(project, tenant)
+        tenant.save()
+        return HttpResponseRedirect(cfg_url)
+
+    return render(request, 'hipchat_sentry_sign_out.html', {
+        'context': context,
+        'tenant': tenant,
     })
 
 
