@@ -45,9 +45,14 @@ class BadTenantError(Exception):
 class MentionedEventManager(models.Manager):
 
     def recent(self, tenant):
-        return MentionedEvent.objects.order_by('-last_mentioned') \
+        rv = list(MentionedEvent.objects.order_by('-last_mentioned')
             .filter(tenant=tenant, last_mentioned__gt=timezone.now() -
-                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT]
+                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT])
+        for me in rv:
+            if me.event is None:
+                me.event = me.group.get_latest_event()
+        Event.objects.bind_nodes([x.event for x in rv], 'data')
+        return rv
 
     def count(self, tenant):
         return MentionedEvent.objects \
