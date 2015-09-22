@@ -298,7 +298,7 @@ class Context(object):
             except (ValueError, Event.DoesNotExist):
                 return None
             group = event.group
-            if str(group.id) != group.id:
+            if str(group.id) != group_id:
                 return None
         else:
             try:

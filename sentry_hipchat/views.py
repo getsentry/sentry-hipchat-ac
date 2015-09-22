@@ -17,7 +17,8 @@ from sentry.models import Organization, Team
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
-from .cards import make_event_notification
+from .cards import make_event_notification, make_generic_notification, \
+     make_subscription_update_notification
 
 
 _link_pattern = re.escape(settings.SENTRY_URL_PREFIX) \
@@ -122,6 +123,7 @@ class InstallableView(View):
     def delete(self, request, oauth_id):
         try:
             tenant = Tenant.objects.get(pk=oauth_id)
+            notify_tenant_removal(tenant)
             tenant.delete()
         except Tenant.DoesNotExist:
             pass
@@ -156,6 +158,7 @@ class GrantAccessForm(forms.Form):
         self.tenant.auth_user = self.user
         self.tenant.organizations = self.cleaned_data['orgs']
         self.tenant.save()
+        notify_tenant_added(self.tenant)
 
 
 class ProjectSelectForm(forms.Form):
@@ -191,11 +194,21 @@ class ProjectSelectForm(forms.Form):
         return set(self.cleaned_data['projects'])
 
     def save_changes(self):
+        new_projects = []
+        removed_projects = []
+
         for project_id, project in self.projects_by_id.iteritems():
             if project_id in self.cleaned_data['projects']:
-                enable_plugin_for_tenant(project, self.tenant)
+                if enable_plugin_for_tenant(project, self.tenant):
+                    new_projects.append(project)
             else:
-                disable_plugin_for_tenant(project, self.tenant)
+                if disable_plugin_for_tenant(project, self.tenant):
+                    removed_projects.append(project)
+
+        if new_projects or removed_projects:
+            ctx = Context.for_tenant(self.tenant)
+            ctx.send_notification(**make_subscription_update_notification(
+                new_projects, removed_projects))
 
 
 def webhook(f):
@@ -266,6 +279,7 @@ def sign_out(request, context):
         for project in tenant.projects.all():
             disable_plugin_for_tenant(project, tenant)
         tenant.save()
+        notify_tenant_removal(tenant)
         return HttpResponseRedirect(cfg_url)
 
     return render(request, 'hipchat_sentry_sign_out.html', {
@@ -324,3 +338,17 @@ def on_link_message(request, context, data):
                 event.group, event, context.tenant, new=False))
 
     return HttpResponse('', status=204)
+
+
+def notify_tenant_added(tenant):
+    ctx = Context.for_tenant(tenant)
+    ctx.send_notification(**make_generic_notification(
+        'The Sentry Hipchat integration was associated with this room.',
+        color='green'))
+
+
+def notify_tenant_removal(tenant):
+    ctx = Context.for_tenant(tenant)
+    ctx.send_notification(**make_generic_notification(
+        'The Sentry Hipchat integration was disassociated with this room.',
+        color='red'))

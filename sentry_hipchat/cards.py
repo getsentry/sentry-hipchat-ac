@@ -96,3 +96,36 @@ def make_event_notification(group, event, tenant, new=True):
         'card': card,
         'notify': True,
     }
+
+
+def make_subscription_update_notification(new=None, removed=None):
+    bits = ['The project subscriptions for this room were updated. ']
+
+    def _proj(project):
+        return '<strong>%s</strong>' % escape(project.name)
+
+    if new:
+        if len(new) == 1:
+            bits.append('New project: %s. ' % _proj(new[0]))
+        else:
+            bits.append('New projects: %s. ' %
+                        ', '.join(_proj(x) for x in new))
+    if removed:
+        if len(removed) == 1:
+            bits.append('Removed project: %s' % _proj(removed[0]))
+        else:
+            bits.append('Removed projects: %s' %
+                        ', '.join(_proj(x) for x in removed))
+    return {
+        'message': ' '.join(bits).strip(),
+        'color': 'green',
+        'notify': False,
+    }
+
+
+def make_generic_notification(text, color=None, notify=False):
+    return {
+        'message': escape(text),
+        'color': color,
+        'notify': notify,
+    }

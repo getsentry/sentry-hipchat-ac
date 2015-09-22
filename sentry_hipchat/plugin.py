@@ -21,6 +21,7 @@ COLORS = {
 
 
 def enable_plugin_for_tenant(project, tenant):
+    rv = False
     plugin = plugins.get('hipchat')
 
     # Make sure the plugin itself is enabled.
@@ -31,10 +32,14 @@ def enable_plugin_for_tenant(project, tenant):
     if tenant.id not in active:
         active.add(tenant.id)
         tenant.projects.add(project)
+        rv = True
     plugin.set_option('tenants', sorted(active), project)
+
+    return rv
 
 
 def disable_plugin_for_tenant(project, tenant):
+    rv = False
     plugin = plugins.get('hipchat')
 
     # Remove our tenant to the plugin.
@@ -42,11 +47,14 @@ def disable_plugin_for_tenant(project, tenant):
     if tenant.id in active:
         tenant.projects.remove(project)
         active.discard(tenant.id)
+        rv = True
     plugin.set_option('tenants', sorted(active), project)
 
     # If the last tenant is gone, we disable the entire plugin.
     if not active:
         plugin.disable(project)
+
+    return rv
 
 
 class HipchatNotifier(NotifyPlugin):
