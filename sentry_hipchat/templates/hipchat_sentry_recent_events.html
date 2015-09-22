@@ -9,7 +9,7 @@
           <li class="event">
             <h4><a href="{{ me.group.get_absolute_url }}" target="_blank">{{ me.event.error }}</a></h4>
             <p class="culprit">{{ me.event.culprit }}
-            <p><strong>Project:</strong> {{ me.event.project.name }}
+            <p class="meta"><strong>Project:</strong> {{ me.event.project.name }} <span class="divider"></span> {{ me.last_mentioned|date:"M d, Y" }} {{ me.last_mentioned|time:"H:i" }}
             </li>
         {% endfor %}
         </ul>

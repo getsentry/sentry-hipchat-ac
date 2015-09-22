@@ -205,6 +205,15 @@ table td {
   margin: 0;
 }
 
+.event-list .divider {
+  display: inline-block;
+  margin: 0 5px;
+  border-left: 1px solid #ddd;
+  height: 12px;
+  position: relative;
+  top: 3px;
+}
+
 .event-list li {
   padding: 0 20px 10px;
   margin: 0 -20px 10px;
@@ -214,6 +223,7 @@ table td {
 .event-list li:last-child {
   margin-bottom: 0;
   border: 0;
+  padding-bottom: 0;
 }
 
 .event-list li:last-child:first-child {
@@ -226,4 +236,9 @@ table td {
 
 .event-list h4, .event-list p {
   margin: 0;
+}
+
+.event-list p.meta {
+  font-size: 90%;
+  color: #738094;
 }
