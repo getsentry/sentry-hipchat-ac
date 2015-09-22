@@ -123,7 +123,7 @@ class InstallableView(View):
         try:
             tenant = Tenant.objects.get(pk=oauth_id)
             tenant.delete()
-        except Tenant.DoesNoteExist:
+        except Tenant.DoesNotExist:
             pass
         return HttpResponse('', status=201)
 
