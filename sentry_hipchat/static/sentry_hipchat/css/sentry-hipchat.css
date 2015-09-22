@@ -75,6 +75,34 @@ hr {
   margin: 20px -20px;
 }
 
+.aui-page-panel {
+  font-size: 14px;
+}
+
+.aui-page-panel .avatar {
+  float: right;
+  border-radius: 3px;
+  width: 32px;
+  height: 32px;
+  position: relative;
+  top: -4px;
+}
+
+/* Tables */
+
+table th {
+  font-weight: 600;
+  text-align: left;
+}
+
+table td {
+  padding: 4px 0;
+}
+
+.interface table th {
+  width: 110px;
+}
+
 /* Forms */
 
 .btn {
@@ -143,4 +171,25 @@ hr {
 .errorlist li {
   background: #f9e6e7;
   color: #e8535a;
+}
+
+.tag-list {
+  list-style-type: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+.tag-list li {
+  display: inline-block;
+  margin: 0 10px 5px 0;
+  vertical-align: middle;
+}
+
+.tag-list li a {
+  display: inline-block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
 }

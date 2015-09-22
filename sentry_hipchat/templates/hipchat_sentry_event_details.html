@@ -68,56 +68,46 @@
           {% if interfaces.user %}
           <hr>
           <div class="interface">
+            <img src="{% gravatar_url interfaces.user.email size 64 %}" class="avatar">
             <h4 class="title">User</h4>
             <table>
-              <tr>
-                {% if interfaces.user.email %}
-                  <td style="width:84px;padding-top:10px;vertical-align:top">
-                    <img src="{% gravatar_url interfaces.user.email size 64 %}">
-                  </td>
+              <colgroup>
+                <col style="width:110px;">
+              </colgroup>
+              <tbody>
+                {% if interfaces.user.id %}
+                  <tr>
+                    <th>ID:</th>
+                    <td class="code">{{ interfaces.user.id }}</td>
+                  </tr>
+                  {% endif %}
+                {% if interfaces.user.ip_address %}
+                  <tr>
+                    <th>IP Address:</th>
+                    <td class="code">{{ interfaces.user.ip_address }}</td>
+                  </tr>
                 {% endif %}
-                <td>
-                  <table>
-                    <colgroup>
-                      <col style="width:130px;">
-                    </colgroup>
-                    <tbody>
-                      {% if interfaces.user.id %}
-                        <tr>
-                          <th>ID:</th>
-                          <td class="code">{{ interfaces.user.id }}</td>
-                        </tr>
-                        {% endif %}
-                      {% if interfaces.user.ip_address %}
-                        <tr>
-                          <th>IP Address:</th>
-                          <td class="code">{{ interfaces.user.ip_address }}</td>
-                        </tr>
-                      {% endif %}
-                      {% if interfaces.user.username %}
-                        <tr>
-                          <th>Username:</th>
-                          <td class="code">{{ interfaces.user.username }}</td>
-                        </tr>
-                      {% endif %}
-                      {% if interfaces.user.email %}
-                        <tr>
-                          <th>Email:</th>
-                          <td class="code">{{ interfaces.user.email }}</td>
-                        </tr>
-                      {% endif %}
-                      {% if interfaces.user.data %}
-                        {% for key, value in interfaces.user.data.iteritems %}
-                          <tr>
-                            <th>{{ key|titlize }}</th>
-                            <td class="code">{{ value }}</td>
-                          </tr>
-                        {% endfor %}
-                      {% endif %}
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
+                {% if interfaces.user.username %}
+                  <tr>
+                    <th>Username:</th>
+                    <td class="code">{{ interfaces.user.username }}</td>
+                  </tr>
+                {% endif %}
+                {% if interfaces.user.email %}
+                  <tr>
+                    <th>Email:</th>
+                    <td class="code">{{ interfaces.user.email }}</td>
+                  </tr>
+                {% endif %}
+                {% if interfaces.user.data %}
+                  {% for key, value in interfaces.user.data.iteritems %}
+                    <tr>
+                      <th>{{ key|titlize }}</th>
+                      <td class="code">{{ value }}</td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
+              </tbody>
             </table>
           </div>
           {% endif %}
