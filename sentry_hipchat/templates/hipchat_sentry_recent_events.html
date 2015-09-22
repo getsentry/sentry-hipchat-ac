@@ -4,14 +4,13 @@
   <div class="aui-page-panel">
     <div class="aui-page-panel-inner">
       <section class="aui-page-panel-content">
-        <ul>
+        <ul class="event-list">
         {% for me in events %}
-          <li><div class="event">
-            <h3>{{ me.event.error }}</h3>
+          <li class="event">
+            <h4><a href="{{ me.group.get_absolute_url }}" target="_blank">{{ me.event.error }}</a></h4>
             <p class="culprit">{{ me.event.culprit }}
             <p><strong>Project:</strong> {{ me.event.project.name }}
-            <p><a href="{{ me.group.get_absolute_url }}" target="_blank" class="btn orange">View in Sentry</a>
-          </div></li>
+            </li>
         {% endfor %}
         </ul>
       </section>
