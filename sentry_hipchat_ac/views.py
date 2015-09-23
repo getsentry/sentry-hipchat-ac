@@ -404,6 +404,7 @@ def event_details(request, context):
     return render(request, 'sentry_hipchat_ac/event_details.html', {
         'context': context,
         'event': event,
+        'back_button_target': request.GET.get('back_button_target'),
         'group': group,
         'interfaces': interface_data,
         'bad_event': bad_event,

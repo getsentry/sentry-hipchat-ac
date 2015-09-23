@@ -1,6 +1,19 @@
 {% extends "sentry_hipchat_ac/layout.html"  %}
 {% load sentry_helpers %}
 {% block body %}
+  <script>
+    function openEvent(id) {
+      AP.require('sidebar', function(sidebar) {
+          sidebar.openView({
+            key: 'sentry.sidebar.event-details',
+            parameters: {
+              event: id
+            }
+          });
+        });
+      return false;
+    }
+  </script>
   <div class="aui-page-panel">
     <div class="aui-page-panel-inner">
       <section class="aui-page-panel-content">
@@ -12,7 +25,7 @@
               <button class="btn minidelete" name="delete">Delete</button>
               <input type="hidden" name="event" value="{{ me.id }}">
             </form>
-            <h4><a href="{{ me.group.get_absolute_url }}" target="_blank">{{ me.event.error }}</a></h4>
+            <h4><a href="{{ me.group.get_absolute_url }}" onclick="return openEvent({{ me.event.id }})" target="_blank">{{ me.event.error }}</a></h4>
             <p class="culprit">{{ me.event.culprit }}
             <p class="meta"><strong>Project:</strong>
               <a target="_blank" href="{{ me.event.proejct.get_absolute_url }}">{{ me.event.project.name }}</a>
