@@ -2,19 +2,19 @@
 {% load sentry_helpers %}
 {% block body %}
   <script>
-    function openEvent(id, backButtonTarget) {
+    function openEvent(id, fromRecent) {
       var token = $('meta[name="token"]').attr('value');
       var params = 'signed_request=' + encodeURIComponent(token) + '&event=' + id;
-      if (backButtonTarget) {
-        params += '&back_button_target=' + backButtonTarget;
+      if (fromRecent) {
+        params += '&from_recent=yes';
       }
       document.location.search = params;
     }
 
-    function backToPanel(target) {
+    function backToRecentEvents() {
       AP.require('sidebar', function(sidebar) {
           sidebar.openView({
-            key: 'sentry.sidebar.' + target,
+            key: 'sentry.sidebar.recent-events',
             parameters: {}
           });
         });
@@ -29,7 +29,7 @@
 
     AP.register({
       "receive-parameters": function(params) {
-        openEvent(params.event, 'recent-events');
+        openEvent(params.event, !!params.fromRecent);
       }
     });
   </script>
@@ -46,8 +46,8 @@
     <div class="aui-page-panel">
       <div class="aui-page-panel-inner">
         <section class="aui-page-panel-content">
-          {% if back_button_target %}
-          <p class="back"><a href="#" onclick="return backToPanel('{{ back_button_target }}')">Back</a>
+          {% if from_recent %}
+          <p class="back"><a href="#" onclick="return backToRecentEvents()">Back to Recent Events</a>
           {% endif %}
           <h3>{{ event.error }}</h3>
           <p class="culprit">{{ event.culprit }}
