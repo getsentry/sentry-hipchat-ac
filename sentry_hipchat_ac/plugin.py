@@ -67,17 +67,17 @@ class HipchatNotifier(NotifyPlugin):
         ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat-ac/issues'),
         ('Source', 'https://github.com/getsentry/sentry-hipchat-ac'),
     ]
-    slug = 'hipchat'
+    slug = 'hipchat-ac'
     title = 'Hipchat'
     conf_title = title
-    conf_key = 'hipchat'
+    conf_key = 'hipchat_ac'
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
 
     def is_configured(self, project):
         return bool(self.get_option('tenants', project))
 
     def configure(self, request, project=None):
-        return render_to_string('hipchat_sentry/configure_plugin.html', dict(
+        return render_to_string('hipchat_sentry_ac/configure_plugin.html', dict(
             on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
             tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri('/api/hipchat/'),
