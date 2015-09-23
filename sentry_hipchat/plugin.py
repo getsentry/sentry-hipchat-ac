@@ -77,7 +77,7 @@ class HipchatNotifier(NotifyPlugin):
         return bool(self.get_option('tenants', project))
 
     def configure(self, request, project=None):
-        return render_to_string('hipchat_sentry_configure_plugin.html', dict(
+        return render_to_string('hipchat_sentry/configure_plugin.html', dict(
             on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
             tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri('/api/hipchat/'),
