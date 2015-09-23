@@ -9,6 +9,7 @@ sentry_hipchat.models
 import jwt
 import time
 import json
+import logging
 import requests
 
 from django.db import models
@@ -20,6 +21,9 @@ from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
 from sentry.models import Event, Group
+
+
+logger = logging.getLogger(__name__)
 
 
 MAX_RECENT = 15
@@ -344,10 +348,14 @@ class Context(object):
         return self.context.get('room_id', self.tenant.room_id)
 
     def post(self, url, data):
-        return requests.post(urljoin(self.tenant.api_base_url, url), headers={
+        resp = requests.post(urljoin(self.tenant.api_base_url, url), headers={
             'Authorization': 'Bearer %s' % self.tenant_token,
             'Content-Type': 'application/json'
         }, data=json.dumps(data), timeout=10)
+        if not resp.ok:
+            logger.warning('Request to "%s" failed:\n%s',
+                           url, resp.text)
+        return resp
 
     def send_notification(self, message, color='yellow', notify=False,
                           format='html', card=None):
@@ -356,7 +364,7 @@ class Context(object):
             data['color'] = color
         if card is not None:
             data['card'] = card
-        print self.post('room/%s/notification' % self.room_id, data).text
+        self.post('room/%s/notification' % self.room_id, data)
 
     def get_main_glance(self):
         count = MentionedEvent.objects.count(self.tenant)
@@ -369,12 +377,12 @@ class Context(object):
         }
 
     def push_main_glance(self):
-        print self.post('addon/ui/room/%s' % self.room_id, {
+        self.post('addon/ui/room/%s' % self.room_id, {
             'glance': [{
                 'content': self.get_main_glance(),
                 'key': 'sentry-main-glance',
             }]
-        }).text
+        })
 
     def _ensure_and_bind_event(self, event):
         rv = self.tenant.projects.filter(pk=event.project.id).first()
