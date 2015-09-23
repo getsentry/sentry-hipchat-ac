@@ -23,7 +23,7 @@ COLORS = {
 
 def enable_plugin_for_tenant(project, tenant):
     rv = False
-    plugin = plugins.get('hipchat')
+    plugin = plugins.get('hipchat-ac')
 
     # Make sure the plugin itself is enabled.
     plugin.enable(project)
@@ -41,7 +41,7 @@ def enable_plugin_for_tenant(project, tenant):
 
 def disable_plugin_for_tenant(project, tenant):
     rv = False
-    plugin = plugins.get('hipchat')
+    plugin = plugins.get('hipchat-ac')
 
     # Remove our tenant to the plugin.
     active = set(plugin.get_option('tenants', project) or ())
@@ -70,7 +70,7 @@ class HipchatNotifier(NotifyPlugin):
     slug = 'hipchat-ac'
     title = 'Hipchat'
     conf_title = title
-    conf_key = 'hipchat_ac'
+    conf_key = 'hipchat-ac'
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
 
     def is_configured(self, project):
