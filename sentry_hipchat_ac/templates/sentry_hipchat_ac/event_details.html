@@ -2,38 +2,23 @@
 {% load sentry_helpers %}
 {% block body %}
   <script>
-    function openEvent(id, fromRecent) {
+    function openEvent(id) {
       var token = $('meta[name="token"]').attr('value');
       var params = 'signed_request=' + encodeURIComponent(token) + '&event=' + id;
-      if (fromRecent) {
-        params += '&from_recent=yes';
-      }
       document.location.search = params;
     }
 
     function backToRecentEvents() {
-      AP.require('sidebar', function(sidebar) {
-        sidebar.openView({
-          key: 'sentry-recent-events-glance',
-          parameters: {}
-        });
-      });
+      // navigate locally.  this only happens if we're already on the
+      // recent events glance.
+      var token = $('meta[name="token"]').attr('value');
+      document.location.href = '{% url "sentry-hipchat-ac-recent-events" %}?signed_request=' + token;
       return false;
     }
 
     AP.register({
       "message.sentry.event-details": function(message) {
-        console.log('msg', message);
         openEvent(message.metadata.event);
-      }
-    });
-
-    AP.register({
-      "receive-parameters": function(params) {
-        if (params.event) {
-          console.log('params', params);
-          openEvent(params.event, !!params.fromRecent);
-        }
       }
     });
   </script>

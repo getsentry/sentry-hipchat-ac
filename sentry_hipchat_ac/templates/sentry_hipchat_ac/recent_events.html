@@ -3,15 +3,9 @@
 {% block body %}
   <script>
     function openEvent(id) {
-      AP.require('sidebar', function(sidebar) {
-        sidebar.openView({
-          key: 'sentry-event-details-glance',
-          parameters: {
-            event: id,
-            fromRecent: true
-          }
-        });
-      });
+      // navigate locally
+      var token = $('meta[name="token"]').attr('value');
+      document.location.href = '{% url "sentry-hipchat-ac-event-details" %}?signed_request=' + token + '&event=' + id + '&from_recent=yes';
       return false;
     }
   </script>
