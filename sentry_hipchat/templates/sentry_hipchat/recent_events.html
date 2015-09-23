@@ -1,4 +1,4 @@
-{% extends "layout.html"  %}
+{% extends "sentry_hipchat/layout.html"  %}
 {% load sentry_helpers %}
 {% block body %}
   <div class="aui-page-panel">
@@ -7,10 +7,15 @@
         <ul class="event-list">
         {% for me in events %}
           <li class="event">
+            <form action="" method="post">
+              {% csrf_token %}
+              <button class="btn minidelete" name="delete">Delete</button>
+              <input type="hidden" name="event" value="{{ me.id }}">
+            </form>
             <h4><a href="{{ me.group.get_absolute_url }}" target="_blank">{{ me.event.error }}</a></h4>
             <p class="culprit">{{ me.event.culprit }}
             <p class="meta"><strong>Project:</strong> {{ me.event.project.name }} <span class="divider"></span> {{ me.last_mentioned|date:"M d, Y" }} {{ me.last_mentioned|time:"H:i" }}
-            </li>
+          </li>
         {% endfor %}
         </ul>
       </section>

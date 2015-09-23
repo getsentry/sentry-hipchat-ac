@@ -134,6 +134,26 @@ table td {
   border: 1px solid #c23037;
 }
 
+.btn.minidelete {
+  float: right;
+  background: #e8535a;
+  border: 1px solid #c23037;
+  font-size: 0;
+  padding: 0!important;
+  width: 18px!important;
+  height: 18px!important;
+  line-height: 18px!important;
+  text-align: center;
+  vertical-align: middle;
+  margin: 0!important;
+}
+
+.btn.minidelete:before {
+  content: "×";
+  font-size: 13px;
+  font-weight: bold;
+}
+
 /* Lists */
 
 .generic-list,

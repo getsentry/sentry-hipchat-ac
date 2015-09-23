@@ -335,7 +335,7 @@ def configure(request, context):
             project_select_form.save_changes()
             return HttpResponseRedirect(request.get_full_path())
 
-    return render(request, 'hipchat_sentry/configure.html', {
+    return render(request, 'sentry_hipchat/configure.html', {
         'context': context,
         'tenant': context.tenant,
         'current_user': request.user,
@@ -361,7 +361,7 @@ def sign_out(request, context):
         notify_tenant_removal(tenant)
         return HttpResponseRedirect(cfg_url)
 
-    return render(request, 'hipchat_sentry/sign_out.html', {
+    return render(request, 'sentry_hipchat/sign_out.html', {
         'context': context,
         'tenant': tenant,
     })
@@ -399,7 +399,7 @@ def event_details(request, context):
             interface_data['exc'] = exc
             interface_data['exc_as_string'] = exc.to_string(event)
 
-    return render(request, 'hipchat_sentry/event_details.html', {
+    return render(request, 'sentry_hipchat/event_details.html', {
         'context': context,
         'event': event,
         'group': group,
@@ -411,7 +411,16 @@ def event_details(request, context):
 @with_context
 def recent_events(request, context):
     events = MentionedEvent.objects.recent(context.tenant)
-    return render(request, 'hipchat_sentry/recent_events.html', {
+
+    if request.method == 'POST':
+        if 'delete' in request.POST:
+            for event in events:
+                if str(event.id) == request.POST['event']:
+                    event.delete()
+                    context.push_main_glance()
+        return HttpResponseRedirect(request.get_full_path())
+
+    return render(request, 'sentry_hipchat/recent_events.html', {
         'context': context,
         'events': events,
     })
