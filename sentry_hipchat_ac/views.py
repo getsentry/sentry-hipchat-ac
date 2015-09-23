@@ -32,7 +32,7 @@ class DescriptorView(View):
 
     def get(self, request):
         return JsonResponse({
-            'key': 'hipchat-sentry',
+            'key': 'com.getsentry.hipchat-ac',
             'name': 'Sentry for HipChat',
             'description': 'Sentry integration for HipChat.',
             'links': {
@@ -132,8 +132,8 @@ class DescriptorView(View):
                             'value': 'Sentry',
                         },
                         'queryUrl': absolute_uri(reverse(
-                            'sentry-hipchat-ac-main-glance')),
-                        'key': 'sentry-main-glance',
+                            'sentry-hipchat-ac-recent-events-glance')),
+                        'key': 'sentry-recent-events-glance',
                         'target': 'sentry.sidebar.recent-events',
                         'icon': {
                             'url': ICON,
@@ -278,7 +278,7 @@ class ProjectSelectForm(forms.Form):
             if removed_projects:
                 MentionedEvent.objects.filter(
                     tenant=self.tenant, project__in=removed_projects).delete()
-            ctx.push_main_glance()
+            ctx.push_recent_events_glance()
 
 
 def webhook(f):
@@ -369,8 +369,8 @@ def sign_out(request, context):
 
 @cors
 @with_context
-def main_glance(request, context):
-    return JsonResponse(context.get_main_glance())
+def recent_events_glance(request, context):
+    return JsonResponse(context.get_recent_events_glance())
 
 
 @with_context
@@ -421,7 +421,7 @@ def recent_events(request, context):
             for event in events:
                 if str(event.id) == request.POST['event']:
                     event.delete()
-                    context.push_main_glance()
+                    context.push_recent_events_glance()
         return HttpResponseRedirect(request.get_full_path())
 
     return render(request, 'sentry_hipchat_ac/recent_events.html', {
@@ -452,7 +452,7 @@ def on_link_message(request, context, data):
                 tenant=context.tenant,
                 event=params['event'] and event or None,
             )
-            context.push_main_glance()
+            context.push_recent_events_glance()
 
     return HttpResponse('', status=204)
 
@@ -462,7 +462,7 @@ def notify_tenant_added(tenant):
     ctx.send_notification(**make_generic_notification(
         'The Sentry Hipchat integration was associated with this room.',
         color='green'))
-    ctx.push_main_glance()
+    ctx.push_recent_events_glance()
 
 
 def notify_tenant_removal(tenant):
@@ -470,4 +470,4 @@ def notify_tenant_removal(tenant):
     ctx.send_notification(**make_generic_notification(
         'The Sentry Hipchat integration was disassociated with this room.',
         color='red'))
-    ctx.push_main_glance()
+    ctx.push_recent_events_glance()

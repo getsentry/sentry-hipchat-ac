@@ -362,7 +362,7 @@ class Context(object):
             data['card'] = card
         self.post('room/%s/notification' % self.room_id, data)
 
-    def get_main_glance(self):
+    def get_recent_events_glance(self):
         count = MentionedEvent.objects.count(self.tenant)
         return {
             'label': {
@@ -372,11 +372,11 @@ class Context(object):
             },
         }
 
-    def push_main_glance(self):
+    def push_recent_events_glance(self):
         self.post('addon/ui/room/%s' % self.room_id, {
             'glance': [{
-                'content': self.get_main_glance(),
-                'key': 'sentry-main-glance',
+                'content': self.get_recent_events_glance(),
+                'key': 'sentry-recent-events-glance',
             }]
         })
 

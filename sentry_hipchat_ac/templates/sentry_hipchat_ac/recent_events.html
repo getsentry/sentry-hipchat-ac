@@ -4,14 +4,14 @@
   <script>
     function openEvent(id) {
       AP.require('sidebar', function(sidebar) {
-          sidebar.openView({
-            key: 'sentry.sidebar.event-details',
-            parameters: {
-              event: id,
-              fromRecent: true
-            }
-          });
+        sidebar.openView({
+          key: 'sentry-event-details-glance',
+          parameters: {
+            event: id,
+            fromRecent: true
+          }
         });
+      });
       return false;
     }
   </script>

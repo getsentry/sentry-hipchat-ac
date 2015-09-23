@@ -20,8 +20,8 @@ urlpatterns = patterns('',
     url('^sidebar/recent-events$', views.recent_events,
         name='sentry-hipchat-ac-recent-events'),
 
-    url('^glance$', views.main_glance,
-        name='sentry-hipchat-ac-main-glance'),
+    url('^glance/recent-events$', views.recent_events_glance,
+        name='sentry-hipchat-ac-recent-events-glance'),
 
     url('^event/link-message$', views.on_link_message,
         name='sentry-hipchat-ac-link-message')

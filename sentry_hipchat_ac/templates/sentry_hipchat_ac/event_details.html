@@ -13,23 +13,27 @@
 
     function backToRecentEvents() {
       AP.require('sidebar', function(sidebar) {
-          sidebar.openView({
-            key: 'sentry.sidebar.recent-events',
-            parameters: {}
-          });
+        sidebar.openView({
+          key: 'sentry-recent-events-glance',
+          parameters: {}
         });
+      });
       return false;
     }
 
     AP.register({
       "message.sentry.event-details": function(message) {
+        console.log('msg', message);
         openEvent(message.metadata.event);
       }
     });
 
     AP.register({
       "receive-parameters": function(params) {
-        openEvent(params.event, !!params.fromRecent);
+        if (params.event) {
+          console.log('params', params);
+          openEvent(params.event, !!params.fromRecent);
+        }
       }
     });
   </script>

@@ -122,7 +122,7 @@ class HipchatNotifier(NotifyPlugin):
                 tenant=self.tenant,
                 event=event,
             )
-            ctx.push_main_glance()
+            ctx.push_recent_events_glance()
 
 
 from .models import Tenant, Context, MentionedEvent
