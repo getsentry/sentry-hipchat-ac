@@ -145,7 +145,7 @@ table td {
   line-height: 18px!important;
   text-align: center;
   vertical-align: middle;
-  margin: 0!important;
+  margin: 0 0 10px 10px!important;
 }
 
 .btn.minidelete:before {
