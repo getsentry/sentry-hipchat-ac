@@ -28,7 +28,7 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
 
     color = COLORS.get(level, 'purple')
 
-    title = '%sSentry %s' % (
+    title = '%sSentry %s Event' % (
         new and 'New ' or '',
         level.title(),
     )
