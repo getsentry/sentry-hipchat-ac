@@ -66,12 +66,20 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             attr['value']['style'] = 'lozenge-success'
         attributes.append(attr)
 
+    description = '%s. Event has been seen %s time%s. First seen %s%s.' % (
+        group.get_level_display().title() + ' in Sentry',
+        group.times_seen,
+        group.times_seen != 1 and 's' or '',
+        group.first_seen.strftime('%Y-%m-%d'),
+        group.first_release and ' (%s)' % group.first_release.short_version or '',
+    )
+
     card = {
         'style': 'application',
         'url': link,
         'id': 'sentry/%s' % event.id,
         'title': event.error(),
-        'description': 'An error ocurred.',
+        'description': ''.join(description),
         'images': {},
         'icon': {
             'url': ICON,
