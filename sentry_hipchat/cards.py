@@ -28,10 +28,10 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
 
     color = COLORS.get(level, 'purple')
 
-    if new:
-        title = 'New Sentry Event'
-    else:
-        title = 'Sentry Event'
+    title = '%sSentry %s' % (
+        new and 'New ' or '',
+        level.title(),
+    )
 
     # Legacy message
     message = (
@@ -96,11 +96,12 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             <a href="%(link)s">
                 <img src="%(icon_sm)s" style="width: 16px; height: 16px">
                 <strong>%(title)s</strong></a>
-            <p><a href="%(link)s">%(err)s</a>
-            <p><strong><code>Project:</code></strong>
-                <a href="%(project_link)s">%(project)s</a>
-            <p><strong><code>Culprit:</code></strong>
-                %(culprit)s
+            <p><a href="%(link)s"><em>%(err)s</em></a>
+            <p>
+                <strong>Project:</strong>
+                <a href="%(project_link)s">%(project)s</a>&nbsp;
+                <strong>Culprit:</strong>
+                 %(culprit)s
             ''' % {
                 'title': title,
                 'icon': ICON,
