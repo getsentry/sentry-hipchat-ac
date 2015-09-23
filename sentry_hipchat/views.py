@@ -275,6 +275,10 @@ class ProjectSelectForm(forms.Form):
             ctx = Context.for_tenant(self.tenant)
             ctx.send_notification(**make_subscription_update_notification(
                 new_projects, removed_projects))
+            if removed_projects:
+                MentionedEvent.objects.filter(
+                    tenant=self.tenant, project__in=removed_projects).delete()
+            ctx.push_main_glance()
 
 
 def webhook(f):
@@ -445,6 +449,7 @@ def notify_tenant_added(tenant):
     ctx.send_notification(**make_generic_notification(
         'The Sentry Hipchat integration was associated with this room.',
         color='green'))
+    ctx.push_main_glance()
 
 
 def notify_tenant_removal(tenant):
@@ -452,3 +457,4 @@ def notify_tenant_removal(tenant):
     ctx.send_notification(**make_generic_notification(
         'The Sentry Hipchat integration was disassociated with this room.',
         color='red'))
+    ctx.push_main_glance()
