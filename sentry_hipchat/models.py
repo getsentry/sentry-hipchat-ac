@@ -35,14 +35,18 @@ def base_url(url):
     return '%s://%s' % (result.scheme, result.netloc)
 
 
-class OauthClientInvalidError(Exception):
+class HipChatException(Exception):
+    pass
+
+
+class OauthClientInvalidError(HipChatException):
 
     def __init__(self, client, *args, **kwargs):
         super(OauthClientInvalidError, self).__init__(*args, **kwargs)
         self.client = client
 
 
-class BadTenantError(Exception):
+class BadTenantError(HipChatException):
     pass
 
 

@@ -380,30 +380,33 @@ def event_details(request, context):
     interface_data = {}
     tags = []
     event_id = request.GET.get('event')
+    bad_event = False
 
     if event_id is not None:
         event = context.get_event(event_id)
         if event is None:
-            return HttpResponse('Bad Request', status=400)
-        group = event.group
+            bad_event = True
+        else:
+            group = event.group
 
-        tags = [(k.split(':', 1)[1] if k.startswith('sentry:') else k,
-                 v) for k, v in event.get_tags()]
+            tags = [(k.split(':', 1)[1] if k.startswith('sentry:') else k,
+                     v) for k, v in event.get_tags()]
 
-        interface_data.update(
-            http=event.interfaces.get('sentry.interfaces.Http'),
-            user=event.interfaces.get('sentry.interfaces.User'),
-        )
-        exc = event.interfaces.get('sentry.interfaces.Exception')
-        if exc is not None:
-            interface_data['exc'] = exc
-            interface_data['exc_as_string'] = exc.to_string(event)
+            interface_data.update(
+                http=event.interfaces.get('sentry.interfaces.Http'),
+                user=event.interfaces.get('sentry.interfaces.User'),
+            )
+            exc = event.interfaces.get('sentry.interfaces.Exception')
+            if exc is not None:
+                interface_data['exc'] = exc
+                interface_data['exc_as_string'] = exc.to_string(event)
 
     return render(request, 'sentry_hipchat/event_details.html', {
         'context': context,
         'event': event,
         'group': group,
         'interfaces': interface_data,
+        'bad_event': bad_event,
         'tags': tags,
     })
 

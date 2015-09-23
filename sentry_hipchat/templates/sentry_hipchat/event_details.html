@@ -10,6 +10,15 @@
       }
     });
   </script>
+  {% if bad_event %}
+    <div class="aui-page-panel">
+      <div class="aui-page-panel-inner">
+        <section class="aui-page-panel-content">
+          <h3>Event not Found</h3>
+        </section>
+      </div>
+    </div>
+  {% endif %}
   {% if event %}
     <div class="aui-page-panel">
       <div class="aui-page-panel-inner">
