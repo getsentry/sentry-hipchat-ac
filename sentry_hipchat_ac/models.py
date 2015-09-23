@@ -1,11 +1,3 @@
-"""
-sentry_hipchat.models
-~~~~~~~~~~~~~~~~~~~~~
-
-:copyright: (c) 2015 by Functional Software Inc., see AUTHORS for more details.
-:license: BSD, see LICENSE for more details.
-"""
-
 import jwt
 import time
 import json
@@ -161,7 +153,7 @@ class MentionedEvent(models.Model):
     event = models.ForeignKey(
         'sentry.Event', related_name='hipchat_mentioned_events',
         null=True)
-    tenant = models.ForeignKey('sentry_hipchat.Tenant')
+    tenant = models.ForeignKey('sentry_hipchat_ac.Tenant')
     last_mentioned = models.DateTimeField(default=timezone.now)
 
 

@@ -9,20 +9,64 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Adding model 'MentionedEvent'
-        db.create_table(u'sentry_hipchat_mentionedevent', (
+        db.create_table(u'sentry_hipchat_ac_mentionedevent', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('project', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_events', to=orm['sentry.Project'])),
             ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_groups', to=orm['sentry.Group'])),
             ('event', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_events', null=True, to=orm['sentry.Event'])),
-            ('tenant', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sentry_hipchat.Tenant'])),
-            ('last_mentioned', self.gf('django.db.models.fields.DateTimeField')()),
+            ('tenant', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sentry_hipchat_ac.Tenant'])),
+            ('last_mentioned', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
         ))
-        db.send_create_signal(u'sentry_hipchat', ['MentionedEvent'])
+        db.send_create_signal(u'sentry_hipchat_ac', ['MentionedEvent'])
+
+        # Adding model 'Tenant'
+        db.create_table(u'sentry_hipchat_ac_tenant', (
+            ('id', self.gf('django.db.models.fields.CharField')(max_length=40, primary_key=True)),
+            ('room_id', self.gf('django.db.models.fields.CharField')(max_length=40)),
+            ('room_name', self.gf('django.db.models.fields.CharField')(max_length=200, null=True)),
+            ('room_owner_id', self.gf('django.db.models.fields.CharField')(max_length=40, null=True)),
+            ('room_owner_name', self.gf('django.db.models.fields.CharField')(max_length=200, null=True)),
+            ('secret', self.gf('django.db.models.fields.CharField')(max_length=120)),
+            ('homepage', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('token_url', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('capabilities_url', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('api_base_url', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('installed_from', self.gf('django.db.models.fields.CharField')(max_length=250)),
+            ('auth_user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_tenant_set', null=True, to=orm['sentry.User'])),
+        ))
+        db.send_create_signal(u'sentry_hipchat_ac', ['Tenant'])
+
+        # Adding M2M table for field organizations on 'Tenant'
+        m2m_table_name = db.shorten_name(u'sentry_hipchat_ac_tenant_organizations')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('tenant', models.ForeignKey(orm[u'sentry_hipchat_ac.tenant'], null=False)),
+            ('organization', models.ForeignKey(orm['sentry.organization'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['tenant_id', 'organization_id'])
+
+        # Adding M2M table for field projects on 'Tenant'
+        m2m_table_name = db.shorten_name(u'sentry_hipchat_ac_tenant_projects')
+        db.create_table(m2m_table_name, (
+            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
+            ('tenant', models.ForeignKey(orm[u'sentry_hipchat_ac.tenant'], null=False)),
+            ('project', models.ForeignKey(orm['sentry.project'], null=False))
+        ))
+        db.create_unique(m2m_table_name, ['tenant_id', 'project_id'])
 
 
     def backwards(self, orm):
         # Deleting model 'MentionedEvent'
-        db.delete_table(u'sentry_hipchat_mentionedevent')
+        db.delete_table(u'sentry_hipchat_ac_mentionedevent')
+
+        # Deleting model 'Tenant'
+        db.delete_table(u'sentry_hipchat_ac_tenant')
+
+        # Removing M2M table for field organizations on 'Tenant'
+        db.delete_table(db.shorten_name(u'sentry_hipchat_ac_tenant_organizations'))
+
+        # Removing M2M table for field projects on 'Tenant'
+        db.delete_table(db.shorten_name(u'sentry_hipchat_ac_tenant_projects'))
 
 
     models = {
@@ -95,6 +139,7 @@ class Migration(SchemaMigration):
         'sentry.project': {
             'Meta': {'unique_together': "(('team', 'slug'), ('organization', 'slug'))", 'object_name': 'Project'},
             'date_added': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
+            'first_event': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'id': ('sentry.db.models.fields.bounded.BoundedBigAutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'organization': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'to': "orm['sentry.Organization']"}),
@@ -111,6 +156,7 @@ class Migration(SchemaMigration):
             'date_started': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
             'id': ('sentry.db.models.fields.bounded.BoundedBigAutoField', [], {'primary_key': 'True'}),
             'new_groups': ('sentry.db.models.fields.bounded.BoundedPositiveIntegerField', [], {'default': '0'}),
+            'owner': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'to': "orm['sentry.User']", 'null': 'True', 'blank': 'True'}),
             'project': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'to': "orm['sentry.Project']"}),
             'ref': ('django.db.models.fields.CharField', [], {'max_length': '64', 'null': 'True', 'blank': 'True'}),
             'url': ('django.db.models.fields.URLField', [], {'max_length': '200', 'null': 'True', 'blank': 'True'}),
@@ -140,16 +186,16 @@ class Migration(SchemaMigration):
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
             'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'})
         },
-        u'sentry_hipchat.mentionedevent': {
+        u'sentry_hipchat_ac.mentionedevent': {
             'Meta': {'object_name': 'MentionedEvent'},
             'event': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'null': 'True', 'to': "orm['sentry.Event']"}),
             'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_groups'", 'to': "orm['sentry.Group']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_mentioned': ('django.db.models.fields.DateTimeField', [], {}),
+            'last_mentioned': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'project': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'to': "orm['sentry.Project']"}),
-            'tenant': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['sentry_hipchat.Tenant']"})
+            'tenant': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['sentry_hipchat_ac.Tenant']"})
         },
-        u'sentry_hipchat.tenant': {
+        u'sentry_hipchat_ac.tenant': {
             'Meta': {'object_name': 'Tenant'},
             'api_base_url': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             'auth_user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_tenant_set'", 'null': 'True', 'to': "orm['sentry.User']"}),
@@ -168,4 +214,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['sentry_hipchat']
+    complete_apps = ['sentry_hipchat_ac']

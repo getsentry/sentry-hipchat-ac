@@ -36,7 +36,7 @@ class DescriptorView(View):
             'name': 'Sentry for HipChat',
             'description': 'Sentry integration for HipChat.',
             'links': {
-                'self': absolute_uri(reverse('sentry-hipchat-descriptor')),
+                'self': absolute_uri(reverse('sentry-hipchat-ac-descriptor')),
             },
             'icon': {
                 'url': ICON,
@@ -46,18 +46,18 @@ class DescriptorView(View):
                     'allowRoom': True,
                     'allowGlobal': False,
                     'callbackUrl': absolute_uri(reverse(
-                        'sentry-hipchat-installable')),
+                        'sentry-hipchat-ac-installable')),
                 },
                 'hipchatApiConsumer': {
                     'scopes': ['send_notification', 'view_room'],
                 },
                 'configurable': {
-                    'url': absolute_uri(reverse('sentry-hipchat-config')),
+                    'url': absolute_uri(reverse('sentry-hipchat-ac-config')),
                 },
                 'webhook': [
                     {
                         'event': 'room_message',
-                        'url': absolute_uri(reverse('sentry-hipchat-link-message')),
+                        'url': absolute_uri(reverse('sentry-hipchat-ac-link-message')),
                         'pattern': _link_pattern,
                         'authentication': 'jwt',
                     },
@@ -70,7 +70,7 @@ class DescriptorView(View):
                         },
                         'location': 'hipchat.sidebar.right',
                         'url': absolute_uri(reverse(
-                            'sentry-hipchat-event-details')),
+                            'sentry-hipchat-ac-event-details')),
                     },
                     {
                         'key': 'sentry.sidebar.recent-events',
@@ -79,7 +79,7 @@ class DescriptorView(View):
                         },
                         'location': 'hipchat.sidebar.right',
                         'url': absolute_uri(reverse(
-                            'sentry-hipchat-recent-events')),
+                            'sentry-hipchat-ac-recent-events')),
                     },
                 ],
                 'action': [
@@ -132,7 +132,7 @@ class DescriptorView(View):
                             'value': 'Sentry',
                         },
                         'queryUrl': absolute_uri(reverse(
-                            'sentry-hipchat-main-glance')),
+                            'sentry-hipchat-ac-main-glance')),
                         'key': 'sentry-main-glance',
                         'target': 'sentry.sidebar.recent-events',
                         'icon': {
@@ -335,7 +335,7 @@ def configure(request, context):
             project_select_form.save_changes()
             return HttpResponseRedirect(request.get_full_path())
 
-    return render(request, 'sentry_hipchat/configure.html', {
+    return render(request, 'sentry_hipchat_ac/configure.html', {
         'context': context,
         'tenant': context.tenant,
         'current_user': request.user,
@@ -350,7 +350,7 @@ def configure(request, context):
 def sign_out(request, context):
     tenant = context.tenant
     cfg_url = '%s?signed_request=%s' % (
-        reverse('sentry-hipchat-config'),
+        reverse('sentry-hipchat-ac-config'),
         context.signed_request
     )
 
@@ -361,7 +361,7 @@ def sign_out(request, context):
         notify_tenant_removal(tenant)
         return HttpResponseRedirect(cfg_url)
 
-    return render(request, 'sentry_hipchat/sign_out.html', {
+    return render(request, 'sentry_hipchat_ac/sign_out.html', {
         'context': context,
         'tenant': tenant,
     })
@@ -401,7 +401,7 @@ def event_details(request, context):
                 interface_data['exc'] = exc
                 interface_data['exc_as_string'] = exc.to_string(event)
 
-    return render(request, 'sentry_hipchat/event_details.html', {
+    return render(request, 'sentry_hipchat_ac/event_details.html', {
         'context': context,
         'event': event,
         'group': group,
@@ -423,7 +423,7 @@ def recent_events(request, context):
                     context.push_main_glance()
         return HttpResponseRedirect(request.get_full_path())
 
-    return render(request, 'sentry_hipchat/recent_events.html', {
+    return render(request, 'sentry_hipchat_ac/recent_events.html', {
         'context': context,
         'events': events,
     })

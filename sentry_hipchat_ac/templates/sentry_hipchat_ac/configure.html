@@ -1,4 +1,4 @@
-{% extends "sentry_hipchat/configure_layout.html" %}
+{% extends "sentry_hipchat_ac/configure_layout.html" %}
 {% block body %}
   {% if tenant.auth_user %}
     <h3>Authorization</h3>
@@ -8,7 +8,7 @@
       {% for org in available_orgs %}
         <strong>{{ org.name }}</strong>{% if not forloop.last %},{% endif %}
       {% endfor %}
-      &nbsp; (<a href="{% url 'sentry-hipchat-sign-out' %}?signed_request={{ context.signed_request }}">Deauthorize</a>)
+      &nbsp; (<a href="{% url 'sentry-hipchat-ac-sign-out' %}?signed_request={{ context.signed_request }}">Deauthorize</a>)
     <h3>Notifications</h3>
     <p>
       Select the projects you want to notifications from:
@@ -20,7 +20,7 @@
       <button type="submit" class="btn">Save changes</button>
     </form>
   {% else %}
-    <img src="{% url 'sentry-media' "sentry_hipchat" "img/sentry-logo.png" %}" class="sentry-logo" />
+    <img src="{% url 'sentry-media' "sentry_hipchat_ac" "img/sentry-logo.png" %}" class="sentry-logo" />
     <p class="intro">
       Welcome to Sentry for Hipchat.  Before we can get going, you need to
       associate this Hipchat room with a Sentry account.

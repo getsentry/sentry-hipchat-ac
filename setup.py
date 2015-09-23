@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-sentry-hipchat
-==============
+sentry-hipchat-ac
+=================
 
 An extension for Sentry which integrates with Hipchat. It will forwards
 notifications to an hipchat room.
@@ -24,11 +24,11 @@ install_requires = [
 ]
 
 setup(
-    name='sentry-hipchat',
+    name='sentry-hipchat-ac',
     version='1.0.0',
     author='Functional Software Inc.',
     author_email='hello@getsentry.com',
-    url='http://github.com/getsentry/sentry-hipchat',
+    url='http://github.com/getsentry/sentry-hipchat-ac',
     description='A Sentry extension which integrates with Hipchat.',
     long_description=__doc__,
     license='BSD',
@@ -41,10 +41,10 @@ setup(
     include_package_data=True,
     entry_points={
         'sentry.apps': [
-            'sentry_hipchat = sentry_hipchat ',
+            'sentry_hipchat_ac = sentry_hipchat_ac',
         ],
         'sentry.plugins': [
-            'hipchat = sentry_hipchat.plugin:HipchatNotifier',
+            'hipchat_ac = sentry_hipchat_ac.plugin:HipchatNotifier',
          ],
     },
     classifiers=[

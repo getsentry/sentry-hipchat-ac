@@ -1,4 +1,4 @@
-import sentry_hipchat
+import sentry_hipchat_ac
 from urllib import quote as url_quote
 
 from django.conf import settings
@@ -60,12 +60,12 @@ def disable_plugin_for_tenant(project, tenant):
 
 class HipchatNotifier(NotifyPlugin):
     author = 'Functional Software Inc.'
-    author_url = 'https://github.com/getsentry/sentry-hipchat'
-    version = sentry_hipchat.VERSION
+    author_url = 'https://github.com/getsentry/sentry-hipchat-ac'
+    version = sentry_hipchat_ac.VERSION
     description = "Event notification to Hipchat."
     resource_links = [
-        ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat/issues'),
-        ('Source', 'https://github.com/getsentry/sentry-hipchat'),
+        ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat-ac/issues'),
+        ('Source', 'https://github.com/getsentry/sentry-hipchat-ac'),
     ]
     slug = 'hipchat'
     title = 'Hipchat'

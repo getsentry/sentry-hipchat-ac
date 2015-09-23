@@ -8,7 +8,7 @@ sentry_hipchat
 
 try:
     VERSION = __import__('pkg_resources') \
-        .get_distribution('sentry_hipchat').version
+        .get_distribution('sentry-hipchat-ac').version
 except Exception, e:
     VERSION = 'unknown'
 
@@ -17,7 +17,7 @@ def _patch_urls():
     from django.conf.urls import include, patterns, url
     from sentry.conf import urls
     urls.urlpatterns = patterns('',
-        url('^api/hipchat/', include('sentry_hipchat.urls')),
+        url('^api/hipchat/', include('sentry_hipchat_ac.urls')),
     ) + urls.urlpatterns
 
 
