@@ -66,17 +66,17 @@ def disable_plugin_for_tenant(project, tenant):
 
 
 class HipchatNotifier(NotifyPlugin):
-    author = 'Functional Software Inc.'
+    author = 'Sentry'
     author_url = 'https://github.com/getsentry/sentry-hipchat-ac'
     version = sentry_hipchat_ac.VERSION
-    description = "Event notification to Hipchat."
+    description = "Event notification to HipChat."
     resource_links = [
         ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat-ac/issues'),
         ('Source', 'https://github.com/getsentry/sentry-hipchat-ac'),
     ]
     slug = 'hipchat-ac'
     # TODO: shorten the title
-    title = 'Hipchat with Atlassian Connect'
+    title = 'HipChat with Atlassian Connect'
     conf_title = title
     conf_key = 'hipchat-ac'
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
