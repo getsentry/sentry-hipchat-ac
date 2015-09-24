@@ -11,10 +11,10 @@ class Migration(SchemaMigration):
         # Adding model 'MentionedEvent'
         db.create_table(u'sentry_hipchat_ac_mentionedevent', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('project', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_events', to=orm['sentry.Project'])),
-            ('group', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_groups', to=orm['sentry.Group'])),
-            ('event', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_mentioned_events', null=True, to=orm['sentry.Event'])),
-            ('tenant', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sentry_hipchat_ac.Tenant'])),
+            ('project', self.gf('sentry.db.models.fields.foreignkey.FlexibleForeignKey')(related_name='hipchat_mentioned_events', to=orm['sentry.Project'])),
+            ('group', self.gf('sentry.db.models.fields.foreignkey.FlexibleForeignKey')(related_name='hipchat_mentioned_groups', to=orm['sentry.Group'])),
+            ('event', self.gf('sentry.db.models.fields.foreignkey.FlexibleForeignKey')(related_name='hipchat_mentioned_events', null=True, to=orm['sentry.Event'])),
+            ('tenant', self.gf('sentry.db.models.fields.foreignkey.FlexibleForeignKey')(to=orm['sentry_hipchat_ac.Tenant'])),
             ('last_mentioned', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime.now)),
         ))
         db.send_create_signal(u'sentry_hipchat_ac', ['MentionedEvent'])
@@ -32,7 +32,7 @@ class Migration(SchemaMigration):
             ('capabilities_url', self.gf('django.db.models.fields.CharField')(max_length=250)),
             ('api_base_url', self.gf('django.db.models.fields.CharField')(max_length=250)),
             ('installed_from', self.gf('django.db.models.fields.CharField')(max_length=250)),
-            ('auth_user', self.gf('django.db.models.fields.related.ForeignKey')(related_name='hipchat_tenant_set', null=True, to=orm['sentry.User'])),
+            ('auth_user', self.gf('sentry.db.models.fields.foreignkey.FlexibleForeignKey')(related_name='hipchat_tenant_set', null=True, to=orm['sentry.User'])),
         ))
         db.send_create_signal(u'sentry_hipchat_ac', ['Tenant'])
 
@@ -188,17 +188,17 @@ class Migration(SchemaMigration):
         },
         u'sentry_hipchat_ac.mentionedevent': {
             'Meta': {'object_name': 'MentionedEvent'},
-            'event': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'null': 'True', 'to': "orm['sentry.Event']"}),
-            'group': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_groups'", 'to': "orm['sentry.Group']"}),
+            'event': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'null': 'True', 'to': "orm['sentry.Event']"}),
+            'group': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'related_name': "'hipchat_mentioned_groups'", 'to': "orm['sentry.Group']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_mentioned': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'project': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'to': "orm['sentry.Project']"}),
-            'tenant': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['sentry_hipchat_ac.Tenant']"})
+            'project': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'related_name': "'hipchat_mentioned_events'", 'to': "orm['sentry.Project']"}),
+            'tenant': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'to': u"orm['sentry_hipchat_ac.Tenant']"})
         },
         u'sentry_hipchat_ac.tenant': {
             'Meta': {'object_name': 'Tenant'},
             'api_base_url': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
-            'auth_user': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'hipchat_tenant_set'", 'null': 'True', 'to': "orm['sentry.User']"}),
+            'auth_user': ('sentry.db.models.fields.foreignkey.FlexibleForeignKey', [], {'related_name': "'hipchat_tenant_set'", 'null': 'True', 'to': "orm['sentry.User']"}),
             'capabilities_url': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             'homepage': ('django.db.models.fields.CharField', [], {'max_length': '250'}),
             'id': ('django.db.models.fields.CharField', [], {'max_length': '40', 'primary_key': 'True'}),

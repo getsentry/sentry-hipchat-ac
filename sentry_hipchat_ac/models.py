@@ -13,6 +13,7 @@ from requests.auth import HTTPBasicAuth
 from datetime import timedelta
 
 from sentry.models import Event, Group
+from sentry.db.models import BaseModel, BaseManager, FlexibleForeignKey
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ class BadTenantError(HipChatException):
     pass
 
 
-class MentionedEventManager(models.Manager):
+class MentionedEventManager(BaseManager):
 
     def recent(self, tenant):
         rv = list(MentionedEvent.objects.order_by('-last_mentioned')
@@ -89,7 +90,7 @@ class MentionedEventManager(models.Manager):
         return evt
 
 
-class TenantManager(models.Manager):
+class TenantManager(BaseManager):
 
     def create(self, id, secret=None, homepage=None,
                capabilities_url=None, room_id=None, token_url=None,
@@ -106,7 +107,7 @@ class TenantManager(models.Manager):
             api_base_url = capabilities_url.rsplit('/', 1)[0]
         installed_from = token_url and base_url(token_url) or None
 
-        return models.Manager.create(self,
+        return BaseManager.create(self,
             id=id,
             room_id=room_id,
             secret=secret,
@@ -144,20 +145,20 @@ class TenantManager(models.Manager):
         raise BadTenantError('Could not find tenant')
 
 
-class MentionedEvent(models.Model):
+class MentionedEvent(BaseModel):
     objects = MentionedEventManager()
-    project = models.ForeignKey(
+    project = FlexibleForeignKey(
         'sentry.Project', related_name='hipchat_mentioned_events')
-    group = models.ForeignKey(
+    group = FlexibleForeignKey(
         'sentry.Group', related_name='hipchat_mentioned_groups')
-    event = models.ForeignKey(
+    event = FlexibleForeignKey(
         'sentry.Event', related_name='hipchat_mentioned_events',
         null=True)
-    tenant = models.ForeignKey('sentry_hipchat_ac.Tenant')
+    tenant = FlexibleForeignKey('sentry_hipchat_ac.Tenant')
     last_mentioned = models.DateTimeField(default=timezone.now)
 
 
-class Tenant(models.Model):
+class Tenant(BaseModel):
     objects = TenantManager()
     id = models.CharField(max_length=40, primary_key=True)
     room_id = models.CharField(max_length=40)
@@ -171,8 +172,8 @@ class Tenant(models.Model):
     api_base_url = models.CharField(max_length=250)
     installed_from = models.CharField(max_length=250)
 
-    auth_user = models.ForeignKey('sentry.User', null=True,
-                                  related_name='hipchat_tenant_set')
+    auth_user = FlexibleForeignKey('sentry.User', null=True,
+                                   related_name='hipchat_tenant_set')
     organizations = models.ManyToManyField(
         'sentry.Organization', related_name='hipchat_tenant_set')
     projects = models.ManyToManyField(
@@ -232,7 +233,7 @@ class Tenant(models.Model):
         MentionedEvent.objects.filter(
             tenant=self
         ).delete()
-        models.Model.delete(self, *args, **kwargs)
+        BaseModel.delete(self, *args, **kwargs)
 
     def clear(self, commit=True):
         self.auth_user = None
