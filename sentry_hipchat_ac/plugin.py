@@ -4,7 +4,9 @@ from urlparse import urlparse
 
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.template.context import RequestContext
 from django.utils.html import escape
+from django.http import HttpResponseRedirect
 
 from sentry.plugins import plugins
 from sentry.plugins.bases.notify import NotifyPlugin
@@ -85,12 +87,17 @@ class HipchatNotifier(NotifyPlugin):
         return bool(self.get_option('tenants', project))
 
     def configure(self, request, project=None):
+        if request.method == 'POST' and project is not None:
+            self.test_configuration(project)
+            return HttpResponseRedirect(request.get_current_url())
         return render_to_string('sentry_hipchat_ac/configure_plugin.html', dict(
+            plugin=self,
             on_premise=ON_PREMISE,
             tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri(reverse('sentry-hipchat-ac-descriptor')),
             install_url='https://www.hipchat.com/addons/install?url=' +
-            url_quote(absolute_uri(reverse('sentry-hipchat-ac-descriptor')))))
+            url_quote(absolute_uri(reverse('sentry-hipchat-ac-descriptor')))),
+            context_instance=RequestContext(request))
 
     def get_url_module(self):
         return 'sentry_hipchat_ac.urls'
