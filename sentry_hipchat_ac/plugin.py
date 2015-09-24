@@ -9,6 +9,7 @@ from django.utils.html import escape
 from sentry.plugins import plugins
 from sentry.plugins.bases.notify import NotifyPlugin
 from sentry.utils.http import absolute_uri
+from django.core.urlresolvers import reverse
 
 from .cards import make_event_notification
 
@@ -88,15 +89,12 @@ class HipchatNotifier(NotifyPlugin):
         return render_to_string('sentry_hipchat_ac/configure_plugin.html', dict(
             on_premise=ON_PREMISE,
             tenants=list(project.hipchat_tenant_set.all()),
-            descriptor=absolute_uri('/api/hipchat/'),
+            descriptor=absolute_uri(reverse('sentry-hipchat-ac-descriptor')),
             install_url='https://www.hipchat.com/addons/install?url=' +
-            url_quote(absolute_uri('/api/hipchat/'))))
+            url_quote(absolute_uri(reverse('sentry-hipchat-ac-descriptor')))))
 
-    def get_url_patterns(self):
-        from django.conf.urls import include, patterns, url
-        return patterns('',
-            url('^api/hipchat-ac/', include('sentry_hipchat_ac.urls')),
-        )
+    def get_url_module(self):
+        return 'sentry_hipchat_ac.urls'
 
     def disable(self, project=None, user=None):
         was_enabled = self.get_option('enabled', project)

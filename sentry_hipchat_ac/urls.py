@@ -3,8 +3,7 @@ from . import views
 
 
 urlpatterns = patterns('',
-    url('^$', views.DescriptorView.as_view()),
-    url('^addon/descriptor$', views.DescriptorView.as_view(),
+    url('^$', views.DescriptorView.as_view(),
         name='sentry-hipchat-ac-descriptor'),
     url('^addon/installable$', views.InstallableView.as_view(),
         name='sentry-hipchat-ac-installable'),
