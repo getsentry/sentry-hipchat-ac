@@ -22,15 +22,13 @@
   {% else %}
     <img src="{% url 'sentry-media' "sentry_hipchat_ac" "img/sentry-logo.png" %}" class="sentry-logo" />
     <p class="intro">
-      Welcome to Sentry for Hipchat.  Before we can get going, you need to
+      Welcome to Sentry for Hipchat. Before we can get going, you need to
       associate this Hipchat room with a Sentry account.
     {% if current_user.is_authenticated %}
     <p>
       You are currently signed in as <strong>{{ current_user.username }}</strong>.
       <a href="{% url 'sentry-logout' %}">Change user?</a>
-    <h3>Grant Access</h3>
-    <p>
-      You can decide which organizations the integration will have access to.
+    <h3>Choose which organizations the integration will have access to:</h3>
     <form action="" method="post">
       {% csrf_token %}
       <div class="generic-list">
