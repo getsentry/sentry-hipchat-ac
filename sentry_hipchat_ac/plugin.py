@@ -69,7 +69,7 @@ class HipchatNotifier(NotifyPlugin):
     ]
     slug = 'hipchat-ac'
     # TODO: shorten the title
-    title = 'Hipchat through Atlassian Connect'
+    title = 'Hipchat with Atlassian Connect'
     conf_title = title
     conf_key = 'hipchat-ac'
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
@@ -84,6 +84,12 @@ class HipchatNotifier(NotifyPlugin):
             descriptor=absolute_uri('/api/hipchat/'),
             install_url='https://www.hipchat.com/addons/install?url=' +
             url_quote(absolute_uri('/api/hipchat/'))))
+
+    def get_url_patterns(self):
+        from django.conf.urls import include, patterns, url
+        return patterns('',
+            url('^api/hipchat-ac/', include('sentry_hipchat_ac.urls')),
+        )
 
     def disable(self, project=None, user=None):
         was_enabled = self.get_option('enabled', project)
