@@ -1,5 +1,6 @@
 import sentry_hipchat_ac
 from urllib import quote as url_quote
+from urlparse import urlparse
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -11,6 +12,12 @@ from sentry.utils.http import absolute_uri
 
 from .cards import make_event_notification
 
+
+ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
+if ADDON_HOST_IDENT in ('localhost', '127.0.0.1'):
+    ADDON_HOST_IDENT = 'app.dev.getsentry.com'
+ON_PREMISE = ADDON_HOST_IDENT not in (
+    'beta.getsentry.com', 'app.getsentry.com')
 
 COLORS = {
     'ALERT': 'red',
@@ -79,7 +86,7 @@ class HipchatNotifier(NotifyPlugin):
 
     def configure(self, request, project=None):
         return render_to_string('sentry_hipchat_ac/configure_plugin.html', dict(
-            on_premise='.getsentry.com' not in request.META['HTTP_HOST'],
+            on_premise=ON_PREMISE,
             tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri('/api/hipchat/'),
             install_url='https://www.hipchat.com/addons/install?url=' +

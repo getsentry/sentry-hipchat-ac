@@ -1,7 +1,6 @@
 import re
 import json
 import requests
-from urlparse import urlparse
 from functools import update_wrapper
 from django import forms
 from django.conf import settings
@@ -17,7 +16,8 @@ from sentry.models import Organization, Team
 
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context, MentionedEvent
-from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant
+from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant, \
+     ADDON_HOST_IDENT
 from .cards import make_event_notification, make_generic_notification, \
      make_subscription_update_notification, ICON, ICON2X
 
@@ -28,13 +28,7 @@ _link_re = re.compile(_link_pattern +
     r'(?P<org>[^/]+)/(?P<proj>[^/]+)/group/'
     r'(?P<group>[^/]+)(/events/(?P<event>[^/]+)|/?)')
 
-
-ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
-if ADDON_HOST_IDENT in ('localhost', '127.0.0.1'):
-    ADDON_HOST_IDENT = 'app.dev.getsentry.com'
-
 ADDON_KEY = getattr(settings, 'HIPCHAT_SENTRY_AC_KEY', None)
-
 if ADDON_KEY is None:
     ADDON_KEY = '.'.join(ADDON_HOST_IDENT.split('.')[::-1]) + '.hipchat-ac'
 
@@ -68,7 +62,8 @@ class DescriptorView(View):
                 'webhook': [
                     {
                         'event': 'room_message',
-                        'url': absolute_uri(reverse('sentry-hipchat-ac-link-message')),
+                        'url': absolute_uri(reverse(
+                            'sentry-hipchat-ac-link-message')),
                         'pattern': _link_pattern,
                         'authentication': 'jwt',
                     },
