@@ -130,7 +130,7 @@ class HipchatNotifier(NotifyPlugin):
             MentionedEvent.objects.mention(
                 project=event.project,
                 group=group,
-                tenant=self.tenant,
+                tenant=tenant,
                 event=event,
             )
             ctx.push_recent_events_glance()
