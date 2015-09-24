@@ -5,7 +5,6 @@
 <p>
   This page only shows in which rooms the project shows up.  To add or
   remove them, you need to use the integration configuration page.
-{% if on_premise %}
 <p>
   If you use the cloud hosted hipchat installation, you can on-click
   install the integration:
@@ -15,6 +14,8 @@
   integration from a descriptor URL” on your room in Hipchat and add the
   following descriptor URL:
 <pre>{{ descriptor }}</pre>
+{% if on_premise %}
+  <!-- todo: marketplace link -->
 {% endif %}
 <h2>Active Rooms</h2>
 {% if not tenants %}

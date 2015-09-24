@@ -17,8 +17,7 @@ from .cards import make_event_notification
 ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
 if ADDON_HOST_IDENT in ('localhost', '127.0.0.1'):
     ADDON_HOST_IDENT = 'app.dev.getsentry.com'
-ON_PREMISE = ADDON_HOST_IDENT not in (
-    'beta.getsentry.com', 'app.getsentry.com')
+ON_PREMISE = ADDON_HOST_IDENT == 'app.getsentry.com'
 
 COLORS = {
     'ALERT': 'red',
