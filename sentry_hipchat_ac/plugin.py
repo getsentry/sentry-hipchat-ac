@@ -1,3 +1,4 @@
+import logging
 import sentry_hipchat_ac
 from urllib import quote as url_quote
 from urlparse import urlparse
@@ -88,10 +89,20 @@ class HipchatNotifier(NotifyPlugin):
 
     def configure(self, request, project=None):
         if request.method == 'POST' and project is not None:
-            self.test_configuration(project)
+            try:
+                test_results = self.test_configuration(project)
+            except Exception as exc:
+                if hasattr(exc, 'read') and callable(exc.read):
+                    test_results = '%s\n%s' % (exc, exc.read())
+                else:
+                    logging.exception('HipChat Plugin raised an error during test')
+                    test_results = 'There was an internal error with the Plugin'
+            if not test_results:
+                test_results = 'No errors returned'
             return HttpResponseRedirect(request.get_current_url())
         return render_to_string('sentry_hipchat_ac/configure_plugin.html', dict(
             plugin=self,
+            plugin_test_results=test_results,
             on_premise=ON_PREMISE,
             tenants=list(project.hipchat_tenant_set.all()),
             descriptor=absolute_uri(reverse('sentry-hipchat-ac-descriptor')),

@@ -1,3 +1,8 @@
+{% if plugin_test_results %}
+<h4>Test Results</h4>
+<pre>{{ plugin_test_results }}</pre>
+{% endif %}
+
 <p>
   Hipchat notifications are managed through Hipchat itself.  After you
   added the Sentry integration directly into Hipchat you can add projects
