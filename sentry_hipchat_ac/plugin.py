@@ -121,7 +121,7 @@ class HipchatNotifier(NotifyPlugin):
             ctx.send_notification(message, color=color, notify=True)
 
     def notify_users(self, group, event, fail_silently=False):
-        tenants = Tenant.objects.filter(project=event.project)
+        tenants = Tenant.objects.filter(projects=event.project)
         for tenant in tenants:
             ctx = Context.for_tenant(tenant)
             ctx.send_notification(**make_event_notification(
