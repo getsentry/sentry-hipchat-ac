@@ -68,7 +68,8 @@ class HipchatNotifier(NotifyPlugin):
         ('Source', 'https://github.com/getsentry/sentry-hipchat-ac'),
     ]
     slug = 'hipchat-ac'
-    title = 'Hipchat'
+    # TODO: shorten the title
+    title = 'Hipchat through Atlassian Connect'
     conf_title = title
     conf_key = 'hipchat-ac'
     timeout = getattr(settings, 'SENTRY_HIPCHAT_TIMEOUT', 3)
