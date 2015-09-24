@@ -88,6 +88,7 @@ class HipchatNotifier(NotifyPlugin):
         return bool(self.get_option('tenants', project))
 
     def configure(self, request, project=None):
+        test_results = None
         if request.method == 'POST' and project is not None:
             try:
                 test_results = self.test_configuration(project)
@@ -99,7 +100,6 @@ class HipchatNotifier(NotifyPlugin):
                     test_results = 'There was an internal error with the Plugin'
             if not test_results:
                 test_results = 'No errors returned'
-            return HttpResponseRedirect(request.get_current_url())
         return render_to_string('sentry_hipchat_ac/configure_plugin.html', dict(
             plugin=self,
             plugin_test_results=test_results,
