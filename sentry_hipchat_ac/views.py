@@ -1,6 +1,7 @@
 import re
 import json
 import requests
+from urlparse import urlparse
 from functools import update_wrapper
 from django import forms
 from django.conf import settings
@@ -28,11 +29,21 @@ _link_re = re.compile(_link_pattern +
     r'(?P<group>[^/]+)(/events/(?P<event>[^/]+)|/?)')
 
 
+ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
+if ADDON_HOST_IDENT in ('localhost', '127.0.0.1'):
+    ADDON_HOST_IDENT = 'app.dev.getsentry.com'
+
+ADDON_KEY = getattr(settings, 'HIPCHAT_SENTRY_AC_KEY', None)
+
+if ADDON_KEY is None:
+    ADDON_KEY = '.'.join(ADDON_HOST_IDENT.split('.')[::-1]) + '.hipchat-ac'
+
+
 class DescriptorView(View):
 
     def get(self, request):
         return JsonResponse({
-            'key': 'com.getsentry.hipchat-ac',
+            'key': ADDON_KEY,
             'name': 'Sentry for HipChat',
             'description': 'Sentry integration for HipChat.',
             'links': {
