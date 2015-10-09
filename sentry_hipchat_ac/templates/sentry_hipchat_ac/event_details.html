@@ -92,7 +92,9 @@
           {% if interfaces.user %}
           <hr>
           <div class="interface">
-            <img src="{% gravatar_url interfaces.user.email size 64 %}" class="avatar">
+            {% if interfaces.user.email %}
+              <img src="{% gravatar_url interfaces.user.email size 64 %}" class="avatar">
+            {% endif %}
             <h4 class="title">User</h4>
             <table>
               <colgroup>
