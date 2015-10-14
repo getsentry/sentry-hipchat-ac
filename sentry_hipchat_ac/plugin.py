@@ -120,23 +120,6 @@ class HipchatNotifier(NotifyPlugin):
             for tenant in Tenant.objects.filter(projects__in=[project]):
                 disable_plugin_for_tenant(project, tenant)
 
-    def on_alert(self, alert, **kwargs):
-        project = alert.project
-
-        tenants = Tenant.objects.filter(project=project)
-        for tenant in tenants:
-            ctx = Context.for_tenant(tenant)
-            message = (
-                '[ALERT] %(project_name)s %(message)s'
-                '[<a href="%(link)s">view</a>]'
-            ) % {
-                'project_name': '<strong>%s</strong>' % escape(project.name),
-                'message': escape(alert.message),
-                'link': alert.get_absolute_url(),
-            }
-            color = COLORS['ALERT']
-            ctx.send_notification(message, color=color, notify=True)
-
     def notify_users(self, group, event, fail_silently=False):
         tenants = Tenant.objects.filter(projects=event.project)
         for tenant in tenants:
