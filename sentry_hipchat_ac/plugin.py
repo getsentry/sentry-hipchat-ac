@@ -6,7 +6,6 @@ from urlparse import urlparse
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template.context import RequestContext
-from django.utils.html import escape
 
 from sentry.plugins import plugins
 from sentry.plugins.bases.notify import NotifyPlugin
