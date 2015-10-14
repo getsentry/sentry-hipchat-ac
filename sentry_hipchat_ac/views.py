@@ -15,7 +15,8 @@ from sentry.utils.http import absolute_uri
 from sentry.models import Organization, Team
 
 from .utils import JsonResponse, IS_DEBUG
-from .models import Tenant, Context, MentionedEvent
+from .models import Tenant, Context
+from . import mentions
 from .plugin import enable_plugin_for_tenant, disable_plugin_for_tenant, \
      ADDON_HOST_IDENT
 from .cards import make_event_notification, make_generic_notification, \
@@ -282,8 +283,7 @@ class ProjectSelectForm(forms.Form):
             ctx.send_notification(**make_subscription_update_notification(
                 new_projects, removed_projects))
             if removed_projects:
-                MentionedEvent.objects.filter(
-                    tenant=self.tenant, project__in=removed_projects).delete()
+                mentions.clear_project_mentions(self.tenant, removed_projects)
             ctx.push_recent_events_glance()
 
 
@@ -420,16 +420,7 @@ def event_details(request, context):
 
 @with_context
 def recent_events(request, context):
-    events = MentionedEvent.objects.recent(context.tenant)
-
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            for event in events:
-                if str(event.id) == request.POST['event']:
-                    event.delete()
-                    context.push_recent_events_glance()
-        return HttpResponseRedirect(request.get_full_path())
-
+    events = mentions.get_recent_mentions(context.tenant)
     return render(request, 'sentry_hipchat_ac/recent_events.html', {
         'context': context,
         'events': events,
@@ -452,7 +443,7 @@ def on_link_message(request, context, data):
                 event.group, event, context.tenant, new=False,
                 event_target=params['event'] is not None))
 
-            MentionedEvent.objects.mention(
+            mentions.mention_event(
                 project=event.project,
                 group=event.group,
                 tenant=context.tenant,

@@ -144,7 +144,7 @@ class HipchatNotifier(NotifyPlugin):
             ctx.send_notification(**make_event_notification(
                 group, event, tenant))
 
-            MentionedEvent.objects.mention(
+            mentions.mention_event(
                 project=event.project,
                 group=group,
                 tenant=tenant,
@@ -153,4 +153,5 @@ class HipchatNotifier(NotifyPlugin):
             ctx.push_recent_events_glance()
 
 
-from .models import Tenant, Context, MentionedEvent
+from .models import Tenant, Context
+from . import mentions

@@ -6,7 +6,6 @@ import requests
 
 from django.db import models
 from django.core.cache import cache
-from django.utils import timezone
 from urlparse import urlparse, urljoin
 
 from requests.auth import HTTPBasicAuth
@@ -14,6 +13,8 @@ from datetime import timedelta
 
 from sentry.models import Event, Group
 from sentry.db.models import BaseModel, BaseManager, FlexibleForeignKey
+
+from . import mentions
 
 
 logger = logging.getLogger(__name__)
@@ -41,53 +42,6 @@ class OauthClientInvalidError(HipChatException):
 
 class BadTenantError(HipChatException):
     pass
-
-
-class MentionedEventManager(BaseManager):
-
-    def recent(self, tenant):
-        rv = list(MentionedEvent.objects.order_by('-last_mentioned')
-            .filter(tenant=tenant, last_mentioned__gt=timezone.now() -
-                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT])
-        for me in rv:
-            if me.event is None:
-                me.event = me.group.get_latest_event()
-        Event.objects.bind_nodes([x.event for x in rv], 'data')
-        return rv
-
-    def count(self, tenant):
-        return MentionedEvent.objects \
-            .filter(tenant=tenant, last_mentioned__gt=timezone.now() -
-                    timedelta(hours=RECENT_HOURS))[:MAX_RECENT].count()
-
-    def mention(self, project, group, tenant, event=None):
-        try:
-            evt = MentionedEvent.objects.get(
-                project=project,
-                group=group,
-                tenant=tenant
-            )
-        except MentionedEvent.DoesNotExist:
-            evt = MentionedEvent.objects.create(
-                project=project,
-                group=group,
-                event=event,
-                tenant=tenant
-            )
-        else:
-            evt.last_mentioned = timezone.now()
-            if event is not None:
-                evt.event = event
-            evt.save()
-            return evt
-
-        old_events = MentionedEvent.objects.filter(
-            tenant=tenant,
-        ).order_by('-last_mentioned')[MAX_RECENT:]
-        for old_event in old_events:
-            old_event.delete()
-
-        return evt
 
 
 class TenantManager(BaseManager):
@@ -143,19 +97,6 @@ class TenantManager(BaseManager):
             pass
 
         raise BadTenantError('Could not find tenant')
-
-
-class MentionedEvent(BaseModel):
-    objects = MentionedEventManager()
-    project = FlexibleForeignKey(
-        'sentry.Project', related_name='hipchat_mentioned_events')
-    group = FlexibleForeignKey(
-        'sentry.Group', related_name='hipchat_mentioned_groups')
-    event = FlexibleForeignKey(
-        'sentry.Event', related_name='hipchat_mentioned_events',
-        null=True)
-    tenant = FlexibleForeignKey('sentry_hipchat_ac.Tenant')
-    last_mentioned = models.DateTimeField(default=timezone.now)
 
 
 class Tenant(BaseModel):
@@ -230,17 +171,13 @@ class Tenant(BaseModel):
     def delete(self, *args, **kwargs):
         for project in self.projects.all():
             disable_plugin_for_tenant(project, self)
-        MentionedEvent.objects.filter(
-            tenant=self
-        ).delete()
+        mentions.clear_tenant_mentions(self)
         BaseModel.delete(self, *args, **kwargs)
 
     def clear(self, commit=True):
         self.auth_user = None
         self.organizations.clear()
-        MentionedEvent.objects.filter(
-            tenant=self
-        ).delete()
+        mentions.clear_tenant_mentions(self)
         for project in self.projects.all():
             disable_plugin_for_tenant(project, self)
         if commit:
@@ -253,6 +190,7 @@ class Tenant(BaseModel):
         }
         room = requests.get(urljoin(self.api_base_url, 'room/%s') %
                             self.room_id, headers=headers, timeout=5).json()
+        print room
         self.room_name = room['name']
         self.room_owner_id = str(room['owner']['id'])
         self.room_owner_name = str(room['owner']['name'])
@@ -364,7 +302,7 @@ class Context(object):
         self.post('room/%s/notification' % self.room_id, data)
 
     def get_recent_events_glance(self):
-        count = MentionedEvent.objects.count(self.tenant)
+        count = mentions.count_recent_mentions(self.tenant)
         return {
             'label': {
                 'type': 'html',
