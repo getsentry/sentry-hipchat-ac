@@ -12,7 +12,7 @@ from sentry.plugins.bases.notify import NotifyPlugin
 from sentry.utils.http import absolute_uri
 from django.core.urlresolvers import reverse
 
-from .cards import make_event_notification
+from .cards import make_event_notification, make_activity_notification
 
 
 ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
@@ -133,6 +133,13 @@ class HipchatNotifier(NotifyPlugin):
                     event=event,
                 )
                 ctx.push_recent_events_glance()
+
+    def notify_about_activity(self, activity):
+        tenants = Tenant.objects.filter(projects=activity.project)
+        for tenant in tenants:
+            with Context.for_tenant(tenant) as ctx:
+                ctx.send_notification(**make_activity_notification(
+                    activity, tenant))
 
 
 from .models import Tenant, Context

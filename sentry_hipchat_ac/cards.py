@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.utils.html import escape
 
+from sentry.models import Activity, User, Event
+
 
 ICON = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
 ICON2X = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
@@ -15,10 +17,22 @@ COLORS = {
 }
 
 
-def make_event_notification(group, event, tenant, new=True, event_target=False):
-    project = event.project
-    level = group.get_level_display().upper()
+def _format_user(user):
+    if user.first_name:
+        name = user.first_name
+    else:
+        parts = user.username.split('@')
+        if len(parts) == 1:
+            name = user.username
+        else:
+            name = parts[0].lower()
+    return '<em>%s</em>' % escape(name)
 
+
+def _make_event_card(group, event, title=None, subtitle=None,
+                     event_target=False, new=False, description=None,
+                     compact=False):
+    project = event.project
     link = group.get_absolute_url()
     if event_target:
         link = '%s/events/%s/' % (
@@ -26,23 +40,12 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             event.id
         )
 
-    color = COLORS.get(level, 'purple')
-
-    title = '%sSentry %s Event' % (
+    event_title = '%sSentry %s Event' % (
         new and 'New ' or '',
-        level.title(),
+        group.get_level_display().title(),
     )
-
-    # Legacy message
-    message = (
-        '[%(level)s]%(project_name)s %(message)s '
-        '[<a href="%(link)s">view</a>]'
-    ) % {
-        'level': escape(level),
-        'project_name': '<strong>%s</strong>' % escape(project.name),
-        'message': escape(event.error()),
-        'link': escape(link),
-    }
+    if title is None:
+        title = escape(event_title)
 
     attributes = []
     for key, value in event.tags:
@@ -66,20 +69,54 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             attr['value']['style'] = 'lozenge-success'
         attributes.append(attr)
 
-    description = '%s. Event has been seen %s time%s. First seen %s%s.' % (
+    fold_description = '%s. Event has been seen %s time%s. First seen %s%s.' % (
         group.get_level_display().title() + ' in Sentry',
         group.times_seen,
         group.times_seen != 1 and 's' or '',
         group.first_seen.strftime('%Y-%m-%d'),
-        group.first_release and ' (%s)' % group.first_release.short_version or '',
+        (group.first_release and ' (%s)' %
+            group.first_release.short_version or ''),
     )
 
-    card = {
+    if compact and description is None:
+        description = ''
+
+    if description is None:
+        description = '<a href="%(link)s"><em>%(err)s</em></a>' % {
+            'link': escape(link),
+            'err': escape(event.error()),
+        }
+    if description:
+        description = '<p>%s</p>' % description
+
+    extra = ''
+    if not compact:
+        extra = '''
+            <p>
+                <strong>Project:</strong>
+                <a href="%(project_link)s">%(project)s</a>&nbsp;
+                <strong>Culprit:</strong>
+                 %(culprit)s
+        ''' % {
+            'project': escape(project.name),
+            'project_link': escape(project.get_absolute_url()),
+            'culprit': escape(event.culprit),
+        }
+    else:
+        attributes = [{
+            'label': 'culprit',
+            'value': {'label': event.culprit},
+        }, {
+            'label': 'title',
+            'value': {'label': event.error()},
+        }] + attributes
+
+    return {
         'style': 'application',
         'url': link,
         'id': 'sentry/%s' % event.id,
-        'title': event.error(),
-        'description': ''.join(description),
+        'title': event_title,
+        'description': fold_description,
         'images': {},
         'icon': {
             'url': ICON,
@@ -96,30 +133,103 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
             <a href="%(link)s">
                 <img src="%(icon_sm)s" style="width: 16px; height: 16px">
                 <strong>%(title)s</strong></a>
-            <p><a href="%(link)s"><em>%(err)s</em></a>
-            <p>
-                <strong>Project:</strong>
-                <a href="%(project_link)s">%(project)s</a>&nbsp;
-                <strong>Culprit:</strong>
-                 %(culprit)s
+            %(subtitle)s
+            %(description)s
+            %(extra)s
             ''' % {
                 'title': title,
+                'subtitle': subtitle or '',
+                'link': escape(link),
                 'icon': ICON,
                 'icon_sm': ICON_SM,
-                'link': escape(link),
-                'err': escape(event.error()),
-                'project': escape(project.name),
-                'project_link': escape(project.get_absolute_url()),
-                'culprit': escape(event.culprit),
+                'description': description,
+                'extra': extra,
             }
         },
+    }
+
+
+def make_event_notification(group, event, tenant, new=True, event_target=False):
+    project = event.project
+    level = group.get_level_display().upper()
+
+    link = group.get_absolute_url()
+    if event_target:
+        link = '%s/events/%s/' % (
+            link.rstrip('/'),
+            event.id
+        )
+
+    color = COLORS.get(level, 'purple')
+
+    # Legacy message
+    message = (
+        '[%(level)s]%(project_name)s %(message)s '
+        '[<a href="%(link)s">view</a>]'
+    ) % {
+        'level': escape(level),
+        'project_name': '<strong>%s</strong>' % escape(project.name),
+        'message': escape(event.error()),
+        'link': escape(link),
     }
 
     return {
         'color': color,
         'message': message,
         'format': 'html',
-        'card': card,
+        'card': _make_event_card(group, event, new=new,
+                                 event_target=event_target),
+        'notify': True,
+    }
+
+
+def make_activity_notification(activity, tenant):
+    if activity.type == Activity.ASSIGNED:
+        assignee_id = activity.data.get('assignee')
+        if assignee_id is None:
+            target_user = None
+        else:
+            target_user = User.objects.get(pk=assignee_id)
+        if target_user is None:
+            message = '%s unassigned a user from the event' % (
+                _format_user(activity.user),)
+        elif target_user.id == activity.user.id:
+            message = '%s assigned themselves to the event' % (
+                _format_user(activity.user),)
+        else:
+            message = '%s assigned %s to the event' % (
+                _format_user(activity.user),
+                _format_user(target_user))
+    elif activity.type == Activity.NOTE:
+        message = '%s left a note on the event' % (
+            _format_user(activity.user),)
+    else:
+        return
+
+    event = activity.event or activity.group.get_latest_event()
+    Event.objects.bind_nodes([event], 'data')
+    project = activity.project
+    link = activity.group.get_absolute_url()
+
+    legacy_message = (
+        '%(project_name)s %(message)s (%(event)s, %(culprit)s) '
+        '[<a href="%(link)s">view</a>]'
+    ) % {
+        'project_name': '<strong>%s</strong>' % escape(project.name),
+        'event': escape(event.error()),
+        'message': message,
+        'culprit': escape(event.culprit),
+        'link': escape(link),
+    }
+
+    return {
+        'color': 'yellow',
+        'message': legacy_message,
+        'card': _make_event_card(activity.group, event, title=message,
+                                 subtitle='%s, %s' % (event.error(),
+                                                      event.culprit),
+                                 compact=True),
+        'format': 'html',
         'notify': True,
     }
 
