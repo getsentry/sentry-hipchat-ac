@@ -279,27 +279,28 @@ class ProjectSelectForm(forms.Form):
                     removed_projects.append(project)
 
         if new_projects or removed_projects:
-            ctx = Context.for_tenant(self.tenant)
-            ctx.send_notification(**make_subscription_update_notification(
-                new_projects, removed_projects))
-            if removed_projects:
-                mentions.clear_project_mentions(self.tenant, removed_projects)
-            ctx.push_recent_events_glance()
+            with Context.for_tenant(self.tenant) as ctx:
+                ctx.send_notification(**make_subscription_update_notification(
+                    new_projects, removed_projects))
+                if removed_projects:
+                    mentions.clear_project_mentions(
+                        self.tenant, removed_projects)
+                ctx.push_recent_events_glance()
 
 
 def webhook(f):
     @csrf_exempt
     def new_f(request, *args, **kwargs):
         data = json.loads(request.body) or {}
-        context = Context.for_request(request, data)
-        return f(request, context, data, *args, **kwargs)
+        with Context.for_request(request, data) as context:
+            return f(request, context, data, *args, **kwargs)
     return update_wrapper(new_f, f)
 
 
 def with_context(f):
     def new_f(request, *args, **kwargs):
-        context = Context.for_request(request)
-        return f(request, context, *args, **kwargs)
+        with Context.for_request(request) as context:
+            return f(request, context, *args, **kwargs)
     return update_wrapper(new_f, f)
 
 
@@ -455,16 +456,16 @@ def on_link_message(request, context, data):
 
 
 def notify_tenant_added(tenant):
-    ctx = Context.for_tenant(tenant)
-    ctx.send_notification(**make_generic_notification(
-        'The Sentry Hipchat integration was associated with this room.',
-        color='green'))
-    ctx.push_recent_events_glance()
+    with Context.for_tenant(tenant) as ctx:
+        ctx.send_notification(**make_generic_notification(
+            'The Sentry Hipchat integration was associated with this room.',
+            color='green'))
+        ctx.push_recent_events_glance()
 
 
 def notify_tenant_removal(tenant):
-    ctx = Context.for_tenant(tenant)
-    ctx.send_notification(**make_generic_notification(
-        'The Sentry Hipchat integration was disassociated with this room.',
-        color='red'))
-    ctx.push_recent_events_glance()
+    with Context.for_tenant(tenant) as ctx:
+        ctx.send_notification(**make_generic_notification(
+            'The Sentry Hipchat integration was disassociated with this room.',
+            color='red'))
+        ctx.push_recent_events_glance()

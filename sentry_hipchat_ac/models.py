@@ -148,8 +148,7 @@ class Tenant(BaseModel):
                 token = data['access_token']
                 cache.set(cache_key, token, data['expires_in'] - 20)
             return token
-        else:
-            return gen_token()
+        return gen_token()
 
     def sign_jwt(self, user_id, data=None):
         if data is None:
@@ -230,6 +229,16 @@ class Context(object):
         self.sender = sender
         self.context = context
         self.signed_request = signed_request
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        # If we get an invalid oauth client we better clean up the tenant
+        # and swallow the error.
+        if isinstance(exc_value, OauthClientInvalidError):
+            self.tenant.delete()
+            return True
 
     @staticmethod
     def for_request(request, body=None):

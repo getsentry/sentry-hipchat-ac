@@ -122,17 +122,17 @@ class HipchatNotifier(NotifyPlugin):
     def notify_users(self, group, event, fail_silently=False):
         tenants = Tenant.objects.filter(projects=event.project)
         for tenant in tenants:
-            ctx = Context.for_tenant(tenant)
-            ctx.send_notification(**make_event_notification(
-                group, event, tenant))
+            with Context.for_tenant(tenant) as ctx:
+                ctx.send_notification(**make_event_notification(
+                    group, event, tenant))
 
-            mentions.mention_event(
-                project=event.project,
-                group=group,
-                tenant=tenant,
-                event=event,
-            )
-            ctx.push_recent_events_glance()
+                mentions.mention_event(
+                    project=event.project,
+                    group=group,
+                    tenant=tenant,
+                    event=event,
+                )
+                ctx.push_recent_events_glance()
 
 
 from .models import Tenant, Context
