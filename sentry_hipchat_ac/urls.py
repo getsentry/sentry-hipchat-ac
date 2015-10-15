@@ -14,6 +14,8 @@ urlpatterns = patterns('',
     url('^configuration/signout$', views.sign_out,
         name='sentry-hipchat-ac-sign-out'),
 
+    url('^dialog/assign$', views.assign_event,
+        name='sentry-hipchat-assign-event'),
     url('^sidebar/event-details$', views.event_details,
         name='sentry-hipchat-ac-event-details'),
     url('^sidebar/recent-events$', views.recent_events,

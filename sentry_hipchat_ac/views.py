@@ -108,6 +108,35 @@ class DescriptorView(View):
                                 }
                             }
                         ],
+                    },
+                    {
+                        'key': 'message.sentry.assign-event',
+                        'name': {
+                            'value': 'Assign',
+                        },
+                        'target': 'sentry-assign-dialog',
+                        'location': 'hipchat.message.action',
+                        'conditions': [
+                            {
+                                'condition': 'card_matches',
+                                'params': {
+                                    'metadata': [
+                                        {'attr': 'sentry_message_type',
+                                         'eq': 'event'},
+                                     ]
+                                }
+                            }
+                        ],
+                    }
+                ],
+                'dialog': [
+                    {
+                        'key': 'sentry-assign-dialog',
+                        'title': {
+                            'value': 'Assign Event',
+                        },
+                        'url': absolute_uri(reverse(
+                            'sentry-hipchat-assign-event')),
                     }
                 ],
                 'glance': [
@@ -416,6 +445,13 @@ def event_details(request, context):
         'interfaces': interface_data,
         'bad_event': bad_event,
         'tags': tags,
+    })
+
+
+@with_context
+def assign_event(request, context):
+    return render(request, 'sentry_hipchat_ac/assign_event.html', {
+        'context': context,
     })
 
 
