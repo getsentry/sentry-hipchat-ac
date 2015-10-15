@@ -189,7 +189,6 @@ class Tenant(BaseModel):
         }
         room = requests.get(urljoin(self.api_base_url, 'room/%s') %
                             self.room_id, headers=headers, timeout=5).json()
-        print room
         self.room_name = room['name']
         self.room_owner_id = str(room['owner']['id'])
         self.room_owner_name = str(room['owner']['name'])
