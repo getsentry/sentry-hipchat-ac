@@ -18,7 +18,9 @@ COLORS = {
 
 
 def _format_user(user):
-    if user.first_name:
+    if user is None:
+        name = 'system'
+    elif user.first_name:
         name = user.first_name
     else:
         parts = user.username.split('@')
@@ -193,7 +195,7 @@ def make_activity_notification(activity, tenant):
         if target_user is None:
             message = '%s unassigned a user from the event' % (
                 _format_user(activity.user),)
-        elif target_user.id == activity.user.id:
+        elif activity.user is not None and target_user.id == activity.user.id:
             message = '%s assigned themselves to the event' % (
                 _format_user(activity.user),)
         else:

@@ -13,22 +13,47 @@
         openEvent(message.metadata.event);
       }
     });
+
+    {% if dismiss_dialog %}
+      AP.require('dialog', function(dialog) {
+        dialog.close();
+      });
+    {% endif %}
+
+    // don't ask ...
+    $(function() {
+      $('#assignee-select').on('change', function(e) {
+        $('#assigned-to-field').val(this.value);
+      });
+    });
   </script>
   {% if event %}
   <div class="aui-page-panel">
+    {% if assigned_to %}
+    <p>
+      The event is currently assigned to {{ assigned_to.user.username }}.
+    {% endif %}
     <div class="aui-page-panel-inner">
       <section class="aui-panel-inner-content">
         <form class="aui" action="" method="post">
           {% csrf_token %}
-          <aui-select
-            id="sync-product-single-select"
-            name="assignee"
-            placeholder="Assign to user">
-            {% for member in member_list %}
-            <aui-option>{{ member.username }}</aui-option>
-            {% endfor %}
-          </aui-select>
-          <button type="submit" class="aui-button aui-button-primary">Assign</button>
+          <input type=hidden name=assigned_to id="assigned-to-field">
+          <div class="field-group">
+            <label for="assignee-select">Assign to user</label>
+            <aui-select
+              id="assignee-select"
+              name="assignee"
+              no-empty-value
+              placeholder="Assign to user">
+              {% for member in member_list %}
+              <aui-option value="{{ member.id }}">{{ member.username }}</aui-option>
+              {% endfor %}
+            </aui-select>
+            <button type="submit" class="aui-button aui-button-primary" name="assign">Assign</button>
+            {% if assigned_to %}
+            <button type="submit" class="aui-button" name="deassign">Deassign</button>
+            {% endif %}
+          </div>
         </form>
       <section>
     </div>

@@ -12,7 +12,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 from sentry.utils.http import absolute_uri
-from sentry.models import Organization, Team, User, OrganizationMember
+from sentry.models import Organization, Team, User, OrganizationMember, \
+     GroupAssignee
 
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
@@ -459,6 +460,8 @@ def assign_event(request, context):
     event = None
     project = None
     member_list = []
+    assigned_to = None
+    dismiss_dialog = False
 
     event_id = request.GET.get('event')
     if event_id:
@@ -473,12 +476,28 @@ def assign_event(request, context):
                     organizationmemberteam__team=project.team,
                 ).values('id')
             ).distinct()[:1000]), key=lambda x: x.email)
+            assigned_to = GroupAssignee.objects.filter(
+                group=event.group
+            ).first()
+
+            if request.method == 'POST':
+                if 'assign' in request.POST:
+                    assignee = next((
+                        x for x in member_list
+                        if str(x.id) == request.POST['assigned_to']), None)
+                    if assignee is not None:
+                        GroupAssignee.objects.assign(event.group, assignee)
+                elif 'deassign' in request.POST:
+                    GroupAssignee.objects.deassign(event.group)
+                dismiss_dialog = True
 
     return render(request, 'sentry_hipchat_ac/assign_event.html', {
         'context': context,
         'event': event,
         'project': project,
         'member_list': member_list,
+        'assigned_to': assigned_to,
+        'dismiss_dialog': dismiss_dialog,
     })
 
 
