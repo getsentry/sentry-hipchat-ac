@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
 from sentry.utils.http import absolute_uri
-from sentry.models import Organization, Team
+from sentry.models import Organization, Team, User, OrganizationMember
 
 from .utils import JsonResponse, IS_DEBUG
 from .models import Tenant, Context
@@ -137,6 +137,12 @@ class DescriptorView(View):
                         },
                         'url': absolute_uri(reverse(
                             'sentry-hipchat-assign-event')),
+                        'options': {
+                            'size': {
+                                'height': '400px',
+                                'width': '600px',
+                            },
+                        },
                     }
                 ],
                 'glance': [
@@ -450,8 +456,29 @@ def event_details(request, context):
 
 @with_context
 def assign_event(request, context):
+    event = None
+    project = None
+    member_list = []
+
+    event_id = request.GET.get('event')
+    if event_id:
+        event = context.get_event(event_id)
+        if event is not None:
+            project = event.project
+            member_list = sorted(set(User.objects.filter(
+                is_active=True,
+                sentry_orgmember_set__organization=project.organization,
+                sentry_orgmember_set__id__in=OrganizationMember.objects.filter(
+                    organizationmemberteam__is_active=True,
+                    organizationmemberteam__team=project.team,
+                ).values('id')
+            ).distinct()[:1000]), key=lambda x: x.email)
+
     return render(request, 'sentry_hipchat_ac/assign_event.html', {
         'context': context,
+        'event': event,
+        'project': project,
+        'member_list': member_list,
     })
 
 

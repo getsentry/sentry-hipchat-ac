@@ -1,0 +1,37 @@
+{% extends "sentry_hipchat_ac/layout.html"  %}
+{% load sentry_helpers %}
+{% block body %}
+  <script>
+    function openEvent(id) {
+      var token = $('meta[name="token"]').attr('value');
+      var params = 'signed_request=' + encodeURIComponent(token) + '&event=' + id;
+      document.location.search = params;
+    }
+
+    AP.register({
+      "message.sentry.assign-event": function(message) {
+        openEvent(message.metadata.event);
+      }
+    });
+  </script>
+  {% if event %}
+  <div class="aui-page-panel">
+    <div class="aui-page-panel-inner">
+      <section class="aui-panel-inner-content">
+        <form class="aui" action="" method="post">
+          {% csrf_token %}
+          <aui-select
+            id="sync-product-single-select"
+            name="assignee"
+            placeholder="Assign to user">
+            {% for member in member_list %}
+            <aui-option>{{ member.username }}</aui-option>
+            {% endfor %}
+          </aui-select>
+          <button type="submit" class="aui-button aui-button-primary">Assign</button>
+        </form>
+      <section>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
