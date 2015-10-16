@@ -138,8 +138,9 @@ class HipchatNotifier(NotifyPlugin):
         tenants = Tenant.objects.filter(projects=activity.project)
         for tenant in tenants:
             with Context.for_tenant(tenant) as ctx:
-                ctx.send_notification(**make_activity_notification(
-                    activity, tenant))
+                n = make_activity_notification(activity, tenant)
+                if n is not None:
+                    ctx.send_notification(**n)
 
 
 from .models import Tenant, Context

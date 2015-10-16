@@ -186,8 +186,12 @@ def make_event_notification(group, event, tenant, new=True, event_target=False):
 
 
 def make_activity_notification(activity, tenant):
-    if activity.type == Activity.ASSIGNED:
-        assignee_id = activity.data.get('assignee')
+    if activity.type in (Activity.UNASSIGNED, Activity.ASSIGNED):
+        if activity.type == Activity.ASSIGNED:
+            assignee_id = activity.data.get('assignee')
+        else:
+            assignee_id = None
+
         if assignee_id is None:
             target_user = None
         else:
