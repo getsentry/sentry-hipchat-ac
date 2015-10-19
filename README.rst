@@ -15,6 +15,7 @@ Development
 -----------
 
 .. code::
+
   git clone git@github.com:getsentry/sentry-hipchat-ac.git  
   workon sentry  
   make  
