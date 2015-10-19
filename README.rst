@@ -10,6 +10,24 @@ Install
 Install the package via ``pip``::
 
     pip install sentry-hipchat
+    
+Development
+-----------
+
+.. code::
+  git clone git@github.com:getsentry/sentry-hipchat-ac.git  
+  workon sentry  
+  make  
+
+
+Create a tunnel to localhost using something like https://ngrok.com/download::
+
+    ngrok http 8000
+    
+Start Sentry with the following parameters set::
+
+    AC_BASE_URL=https://<xxx>.ngrok.io HTTPS=on sentry runserver
+
 
 Configuration
 -------------
