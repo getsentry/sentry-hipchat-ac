@@ -28,13 +28,14 @@
     });
   </script>
   {% if event %}
-  <div class="aui-page-panel">
-    {% if assigned_to %}
-    <p>
-      The event is currently assigned to {{ assigned_to.user.username }}.
-    {% endif %}
+  <div class="aui-page-panel" style="margin-top: 0;">
     <div class="aui-page-panel-inner">
-      <section class="aui-panel-inner-content">
+      <section class="aui-panel-inner-content" style="padding: 20px 0">
+        {% if assigned_to %}
+          <div class="dialog-header">
+            <h3>Currently assigned: {{ assigned_to.user.username }}</h3>
+          </div>
+        {% endif %}
         <form class="aui" action="" method="post">
           {% csrf_token %}
           <input type=hidden name=assigned_to id="assigned-to-field">

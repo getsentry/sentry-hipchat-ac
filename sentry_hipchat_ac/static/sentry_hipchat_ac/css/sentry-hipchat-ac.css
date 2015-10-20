@@ -88,6 +88,10 @@ hr {
   top: -4px;
 }
 
+.dialog-header {
+  padding: 0 30px;
+}
+
 /* Tables */
 
 table th {
