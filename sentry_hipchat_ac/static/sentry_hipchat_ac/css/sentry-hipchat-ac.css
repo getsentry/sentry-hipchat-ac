@@ -63,12 +63,6 @@ a:active {
 
 /* Layout */
 
-#page {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 10px 0;
-}
-
 hr {
   border: 0;
   border-top: 1px solid #eee;
@@ -77,6 +71,7 @@ hr {
 
 .aui-page-panel {
   font-size: 14px;
+  margin: -1px 0 0;
 }
 
 .aui-page-panel .avatar {
