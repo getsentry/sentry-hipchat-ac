@@ -239,6 +239,10 @@ table td {
   border-bottom: 1px solid #eee;
 }
 
+.event-list li.empty {
+  text-align: center;
+}
+
 .event-list li:last-child {
   margin-bottom: 0;
   border: 0;
