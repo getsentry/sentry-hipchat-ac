@@ -23,8 +23,13 @@ def get_key(tenant):
 def get_recent_mentions(tenant):
     client = cluster.get_routing_client()
     key = get_key(tenant)
-    items = [json.loads(x) for x in client.zrangebyscore(
+    ids = [x for x in client.zrangebyscore(
         key, time.time() - (RECENT_HOURS * 60), '+inf')][-MAX_RECENT:]
+
+    with cluster.map() as map_client:
+        items = [map_client.get('%s:%s' % (key, id)) for id in ids]
+    items = [json.loads(x.value) for x in items if x.value is not None]
+
     projects = items and dict((x.id, x) for x in Project.objects.filter(
         pk__in=[x['project'] for x in items],
     )) or {}
@@ -74,14 +79,19 @@ def clear_project_mentions(tenant, projects):
 
 def mention_event(project, group, tenant, event=None):
     ts = to_timestamp(timezone.now())
+    id = '%s/%s' % (group.id, event.id if event is not None else '-')
     item = json.dumps({
         'project': project.id,
         'group': group.id,
         'event': event.id if event is not None else None,
         'last_mentioned': ts,
     })
+
+    expires = (RECENT_HOURS + 1) * 60 * 60
     with cluster.map() as client:
         key = get_key(tenant)
-        client.zadd(key, ts, item)
+        client.zadd(key, ts, id)
+        client.expire(key, expires)
+        client.setex('%s:%s' % (key, id), expires, item)
         client.zremrangebyscore(key, '-inf', time.time() - (RECENT_HOURS * 60))
         client.zremrangebyrank(key, 0, -MAX_RECENT - 1)
