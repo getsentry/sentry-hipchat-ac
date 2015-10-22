@@ -16,7 +16,7 @@ from .cards import make_event_notification, make_activity_notification
 
 
 ADDON_HOST_IDENT = urlparse(settings.SENTRY_URL_PREFIX).hostname
-if ADDON_HOST_IDENT in ('localhost', '127.0.0.1'):
+if ADDON_HOST_IDENT in ('localhost', '127.0.0.1', None, ''):
     ADDON_HOST_IDENT = 'app.dev.getsentry.com'
 ON_PREMISE = ADDON_HOST_IDENT == 'app.getsentry.com'
 
