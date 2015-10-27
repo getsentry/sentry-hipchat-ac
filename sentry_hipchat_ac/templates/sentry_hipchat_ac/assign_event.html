@@ -33,7 +33,7 @@
       <section class="aui-panel-inner-content" style="padding: 20px 0">
         {% if assigned_to %}
           <div class="dialog-header">
-            <h3>Currently assigned: {{ assigned_to.user.username }}</h3>
+            <h3>Currently assigned: {{ assigned_to.user.get_display_name }}</h3>
           </div>
         {% endif %}
         <form class="aui" action="" method="post">
@@ -47,7 +47,7 @@
               no-empty-value
               placeholder="Assign to user">
               {% for member in member_list %}
-              <aui-option value="{{ member.id }}">{{ member.username }}</aui-option>
+              <aui-option value="{{ member.id }}">{{ member.get_display_name }}</aui-option>
               {% endfor %}
             </aui-select>
             <button type="submit" class="aui-button aui-button-primary" name="assign">Assign</button>
