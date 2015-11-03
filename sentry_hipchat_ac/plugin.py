@@ -70,7 +70,7 @@ class HipchatNotifier(NotifyPlugin):
     author = 'Sentry'
     author_url = 'https://github.com/getsentry/sentry-hipchat-ac'
     version = sentry_hipchat_ac.VERSION
-    description = "Event notification to HipChat."
+    description = "Bring Sentry to HipChat."
     resource_links = [
         ('Bug Tracker', 'https://github.com/getsentry/sentry-hipchat-ac/issues'),
         ('Source', 'https://github.com/getsentry/sentry-hipchat-ac'),

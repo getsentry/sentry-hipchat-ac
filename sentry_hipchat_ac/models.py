@@ -314,7 +314,7 @@ class Context(object):
         return {
             'label': {
                 'type': 'html',
-                'value': '<b>%s</b> Recent Sentry Event%s' % (
+                'value': '<b>%s</b> Recent Sentry Issue%s' % (
                     count, count != 1 and 's' or '')
             },
         }

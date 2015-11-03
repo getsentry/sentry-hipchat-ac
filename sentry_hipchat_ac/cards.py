@@ -42,7 +42,7 @@ def _make_event_card(group, event, title=None, subtitle=None,
             event.id
         )
 
-    event_title = '%sSentry %s Event' % (
+    event_title = '%sSentry %s Issue' % (
         new and 'New ' or '',
         group.get_level_display().title(),
     )
@@ -71,7 +71,7 @@ def _make_event_card(group, event, title=None, subtitle=None,
             attr['value']['style'] = 'lozenge-success'
         attributes.append(attr)
 
-    fold_description = '%s. Event has been seen %s time%s. First seen %s%s.' % (
+    fold_description = '%s. Issue has been seen %s time%s. First seen %s%s.' % (
         group.get_level_display().title() + ' in Sentry',
         group.times_seen,
         group.times_seen != 1 and 's' or '',

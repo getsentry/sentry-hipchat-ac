@@ -74,7 +74,7 @@ class DescriptorView(View):
                     {
                         'key': 'sentry.sidebar.event-details',
                         'name': {
-                            'value': 'Sentry Event Details',
+                            'value': 'Sentry Issue Details',
                         },
                         'location': 'hipchat.sidebar.right',
                         'url': absolute_uri(reverse(
@@ -83,7 +83,7 @@ class DescriptorView(View):
                     {
                         'key': 'sentry.sidebar.recent-events',
                         'name': {
-                            'value': 'Recent Sentry Events',
+                            'value': 'Recent Sentry Issues',
                         },
                         'location': 'hipchat.sidebar.right',
                         'url': absolute_uri(reverse(
@@ -134,7 +134,7 @@ class DescriptorView(View):
                     {
                         'key': 'sentry-assign-dialog',
                         'title': {
-                            'value': 'Assign Event',
+                            'value': 'Assign Issue',
                         },
                         'url': absolute_uri(reverse(
                             'sentry-hipchat-assign-event')),
@@ -150,7 +150,7 @@ class DescriptorView(View):
                     # Invisible dummy glance for normal sidebars
                     {
                         'name': {
-                            'value': 'Sentry Event Details',
+                            'value': 'Sentry Issue Details',
                         },
                         'key': 'sentry-event-details-glance',
                         'target': 'sentry.sidebar.event-details',
