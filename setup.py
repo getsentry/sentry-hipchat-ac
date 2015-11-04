@@ -5,9 +5,6 @@ sentry-hipchat-ac
 
 An extension for Sentry which integrates with HipChat. It will forwards
 notifications to an hipchat room.
-
-:copyright: (c) 2011 by the Linovia, see AUTHORS for more details.
-:license: BSD, see LICENSE for more details.
 """
 from setuptools import setup, find_packages
 
@@ -31,7 +28,7 @@ setup(
     url='http://github.com/getsentry/sentry-hipchat-ac',
     description='A Sentry extension which integrates with HipChat.',
     long_description=__doc__,
-    license='BSD',
+    license='Apache 2.0',
     packages=find_packages(exclude=['tests']),
     zip_safe=False,
     install_requires=install_requires,
