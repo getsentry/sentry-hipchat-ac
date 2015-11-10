@@ -191,7 +191,7 @@ class Tenant(BaseModel):
                             self.room_id, headers=headers, timeout=5).json()
         self.room_name = room['name']
         self.room_owner_id = str(room['owner']['id'])
-        self.room_owner_name = str(room['owner']['name'])
+        self.room_owner_name = room['owner']['name']
         if commit:
             self.save()
 
