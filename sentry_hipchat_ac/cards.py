@@ -20,8 +20,8 @@ COLORS = {
 def _format_user(user):
     if user is None:
         name = 'system'
-    elif user.first_name:
-        name = user.first_name
+    elif user.name:
+        name = user.name
     else:
         parts = user.username.split('@')
         if len(parts) == 1:
