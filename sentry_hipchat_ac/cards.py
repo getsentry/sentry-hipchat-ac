@@ -236,7 +236,7 @@ def make_activity_notification(activity, tenant):
                                                       event.culprit),
                                  compact=True),
         'format': 'html',
-        'notify': True,
+        'notify': False,
     }
 
 
