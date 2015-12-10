@@ -10,7 +10,7 @@ from django.conf import settings
 
 
 MAX_RECENT = 15
-RECENT_HOURS = 12
+RECENT_HOURS = 24 * 30
 
 
 cluster = make_rb_cluster(settings.SENTRY_REDIS_OPTIONS['hosts'])
