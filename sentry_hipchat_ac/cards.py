@@ -212,7 +212,7 @@ def make_activity_notification(activity, tenant):
     else:
         return
 
-    event = activity.event or activity.group.get_latest_event()
+    event = activity.group.get_latest_event()
     Event.objects.bind_nodes([event], 'data')
     project = activity.project
     link = activity.group.get_absolute_url()
