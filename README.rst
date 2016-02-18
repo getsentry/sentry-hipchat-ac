@@ -10,6 +10,10 @@ Install
 Install the package via ``pip``::
 
     pip install https://github.com/getsentry/sentry-hipchat-ac/archive/master.zip
+    
+Run migrations after installation is complete
+
+    sentry upgrade
 
 Development
 -----------
