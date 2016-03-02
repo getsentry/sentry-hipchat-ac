@@ -1,7 +1,6 @@
 import json
 import time
 
-from sentry.utils.redis import make_rb_cluster
 from sentry.utils.dates import to_datetime, to_timestamp
 from sentry.models import Project, Group, Event
 
@@ -13,7 +12,14 @@ MAX_RECENT = 15
 RECENT_HOURS = 24 * 30
 
 
-cluster = make_rb_cluster(settings.SENTRY_REDIS_OPTIONS['hosts'])
+# The Redis cluster manager (``clusters``) was added in Sentry 8.2 (GH-2714)
+# and replaces ``make_rb_cluster`` (which will be removed in a future version.)
+try:
+    from sentry.utils.redis import clusters
+    cluster = clusters.get('default')
+except ImportError:
+    from sentry.utils.redis import make_rb_cluster
+    cluster = make_rb_cluster(settings.SENTRY_REDIS_OPTIONS['hosts'])
 
 
 def get_key(tenant):
