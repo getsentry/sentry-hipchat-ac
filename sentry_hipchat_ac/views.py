@@ -284,8 +284,8 @@ class ProjectSelectForm(forms.Form):
                                               with_projects=True)
             for team, projects in teams:
                 for project in projects:
-                    project_choices.append((str(project.id), '%s/%s' % (
-                        org.name, project.name)))
+                    project_choices.append((str(project.id), '%s | %s / %s' % (
+                        org.name, team.name, project.name)))
                     self.projects_by_id[str(project.id)] = project
 
         project_choices.sort(key=lambda x: x[1].lower())
