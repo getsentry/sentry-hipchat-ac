@@ -340,6 +340,16 @@ def with_context(f):
     return update_wrapper(new_f, f)
 
 
+def allow_frame(f):
+    def new_f(request, *args, **kwargs):
+        resp = f(request, *args, **kwargs)
+        # put something here so that sentry does not overwrite it
+        # with deny.
+        resp['X-Frame-Options'] = 'allow'
+        return resp
+    return update_wrapper(new_f, f)
+
+
 def cors(f):
     def new_f(request, *args, **kwargs):
         origin = request.META.get('HTTP_ORIGIN')
@@ -353,6 +363,7 @@ def cors(f):
     return update_wrapper(new_f, f)
 
 
+@allow_frame
 @with_context
 def configure(request, context):
     # XXX: this is a bit terrible because it means the login url is
@@ -389,6 +400,7 @@ def configure(request, context):
     })
 
 
+@allow_frame
 @with_context
 def sign_out(request, context):
     tenant = context.tenant
@@ -411,11 +423,13 @@ def sign_out(request, context):
 
 
 @cors
+@allow_frame
 @with_context
 def recent_events_glance(request, context):
     return JsonResponse(context.get_recent_events_glance())
 
 
+@allow_frame
 @with_context
 def event_details(request, context):
     event = None
@@ -455,6 +469,7 @@ def event_details(request, context):
     })
 
 
+@allow_frame
 @with_context
 def assign_event(request, context):
     event = None
@@ -501,6 +516,7 @@ def assign_event(request, context):
     })
 
 
+@allow_frame
 @with_context
 def recent_events(request, context):
     events = mentions.get_recent_mentions(context.tenant)
