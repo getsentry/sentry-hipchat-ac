@@ -4,9 +4,9 @@ from django.utils.html import escape
 from sentry.models import Activity, User, Event
 
 
-ICON = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
-ICON2X = 'https://s3.amazonaws.com/f.cl.ly/items/0X2q0W011B1i1m2D140m/sentry-icon.png'
-ICON_SM = 'https://app.getsentry.com/_static/sentry/images/favicon.ico'
+ICON = 'https://sentry-hipchat-ac-assets.s3.amazonaws.com/sentry-icon.png'
+ICON2X = 'https://sentry-hipchat-ac-assets.s3.amazonaws.com/sentry-icon.png'
+ICON_SM = 'https://sentry-hipchat-ac-assets.s3.amazonaws.com/favicon.ico'
 
 COLORS = {
     'ALERT': 'red',
