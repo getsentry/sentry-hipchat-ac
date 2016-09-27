@@ -1,6 +1,8 @@
 sentry-hipchat-ac
 =================
 
+**DEPRECATED: This project now lives in `sentry-plugins <https://github.com/getsentry/sentry-plugins>`_**
+
 An extension for Sentry which integrates with Hipchat.
 It will send issues notification to Hipchat.
 
